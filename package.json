@@ -28,7 +28,7 @@
   "maintainers": [
     "Adriean Khisbe <adriean.khisbe@live.fr> (https://github.com/AdrieanKhisbe/)"
   ],
-  "license": "Apache-2.0",
+  "license": "MIT",
   "readmeFilename": "README.md",
   "dependencies": {
     "async": "~2.6.2",
