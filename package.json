@@ -6,7 +6,7 @@
   "scripts": {
     "test": "tape test/*.js",
     "cover": "nyc tape test/*.js",
-    "lint": "eslint index.js",
+    "lint": "eslint .",
     "publish-coverage": "nyc report --reporter=lcov > coverage.lcov && codecov"
   },
   "repository": {
@@ -24,6 +24,7 @@
   "license": "Apache-2.0",
   "readmeFilename": "README.md",
   "devDependencies": {
+    "@-k/eslint-plugin": "^0.1.2",
     "codecov": "^3.3.0",
     "eslint": "^5.16.0",
     "nyc": "^13.3.0",
