@@ -8,9 +8,9 @@
     "node": ">= 8.10.0"
   },
   "scripts": {
-    "test": "ava",
-    "cover": "nyc ava",
+    "test:unit": "ava",
     "lint": "eslint .",
+    "test": "npm run lint && nyc npm run test:unit",
     "publish-coverage": "nyc report --reporter=lcov > coverage.lcov && codecov"
   },
   "repository": {
