@@ -1,8 +1,9 @@
 {
-  "name": "shortstop",
-  "version": "1.0.1",
+  "name": "protocall",
+  "version": "1.0.0-alpha.0",
   "description": "Enable use of protocols (such as file:, buffer:, or method:) in configuration files.",
   "main": "index.js",
+  "homepage": "https://github.com/omni-tools/protocall#readme",
   "scripts": {
     "test": "ava",
     "cover": "nyc ava",
@@ -11,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/krakenjs/shortstop.git"
+    "url": "https://github.com/omni-tools/protocall.git"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -21,8 +22,19 @@
     "configuration"
   ],
   "author": "Erik Toth <ertoth@paypal.com>",
+  "contributors": [
+    "Adriean Khisbe <adriean.khisbe@live.fr> (https://github.com/AdrieanKhisbe/)"
+  ],
+  "maintainers": [
+    "Adriean Khisbe <adriean.khisbe@live.fr> (https://github.com/AdrieanKhisbe/)"
+  ],
   "license": "Apache-2.0",
   "readmeFilename": "README.md",
+  "dependencies": {
+    "async": "~2.6.2",
+    "caller": "^1.0.1",
+    "glob": "^7.1.5"
+  },
   "devDependencies": {
     "@-k/eslint-plugin": "^0.1.2",
     "ava": "^2.4.0",
@@ -31,11 +43,6 @@
     "lodash": "^4.17.15",
     "nyc": "^13.3.0",
     "tape": "~4.10.1"
-  },
-  "dependencies": {
-    "async": "~2.6.2",
-    "caller": "^1.0.1",
-    "glob": "^7.1.5"
   },
   "ava": {
     "files": [
