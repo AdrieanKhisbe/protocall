@@ -4,8 +4,8 @@
   "description": "Enable use of protocols (such as file:, buffer:, or method:) in configuration files.",
   "main": "index.js",
   "scripts": {
-    "test": "tape test/*.js",
-    "cover": "nyc tape test/*.js",
+    "test": "ava",
+    "cover": "nyc ava",
     "lint": "eslint .",
     "publish-coverage": "nyc report --reporter=lcov > coverage.lcov && codecov"
   },
@@ -25,8 +25,10 @@
   "readmeFilename": "README.md",
   "devDependencies": {
     "@-k/eslint-plugin": "^0.1.2",
+    "ava": "^2.4.0",
     "codecov": "^3.3.0",
     "eslint": "^5.16.0",
+    "lodash": "^4.17.15",
     "nyc": "^13.3.0",
     "tape": "~4.10.1"
   },
@@ -34,5 +36,10 @@
     "async": "~2.6.2",
     "caller": "^1.0.1",
     "glob": "^7.1.5"
+  },
+  "ava": {
+    "files": [
+      "test/*.test.js"
+    ]
   }
 }
