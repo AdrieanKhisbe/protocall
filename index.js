@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const resolver = require('./src/resolver');
+const handlers = require('./src/handlers');
 
 function isModule(file) {
   // require.resolve will locate a file without a known extension (e.g. txt)
@@ -9,7 +10,7 @@ function isModule(file) {
   return ext === '' || require.extensions[ext];
 }
 
-exports.create = function create(parent) {
+function create(parent) {
   return Object.create(resolver.create(parent), {
     resolveFile: {
       value: function resolveFile(file, callback) {
@@ -35,4 +36,6 @@ exports.create = function create(parent) {
       }
     }
   });
-};
+}
+
+module.exports = {resolver, create, handlers};
