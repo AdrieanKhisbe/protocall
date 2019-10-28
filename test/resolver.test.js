@@ -1,6 +1,6 @@
 const path = require('path');
 const test = require('ava');
-const shortstop = require('..');
+const protocall = require('..');
 
 function foo(input) {
   return `${input}_foo`;
@@ -11,7 +11,7 @@ function bar(input, cb) {
 }
 
 test('resolver', t => {
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   t.is(typeof resolver, 'object');
   t.is(typeof resolver.use, 'function');
   t.is(typeof resolver.resolve, 'function');
@@ -19,7 +19,7 @@ test('resolver', t => {
 });
 
 test('use', t => {
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   resolver.use('foo', foo);
 
   t.is(typeof resolver._handlers['foo'], 'object');
@@ -39,7 +39,7 @@ test('unuse', t => {
     // noop
   }
 
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   const unuseA = resolver.use('handlerA', handlerA);
   const unuseB = resolver.use('handlerB', handlerB);
   const unuseC = resolver.use('handlerC', handlerC);
@@ -89,7 +89,7 @@ test('unuse stack', t => {
     // noop
   }
 
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   const unuseA = resolver.use(name, customA);
   const unuseB = resolver.use(name, customB);
   const unuseC = resolver.use(name, customC);
@@ -120,7 +120,7 @@ test('unuse stack', t => {
 });
 
 test.cb('resolve', t => {
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   resolver.use('foo', foo);
   resolver.use('bar', bar);
 
@@ -136,7 +136,7 @@ test.cb('resolve', t => {
 });
 
 test.cb('resolve with filename', t => {
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   resolver.use('foo', foo);
   resolver.use('bar', function(data, file, cb) {
     cb(null, file + data);
@@ -154,7 +154,7 @@ test.cb('resolve with filename', t => {
 });
 
 test.cb('nested resolve', t => {
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   resolver.use('foo', foo);
   resolver.use('bar', bar);
 
@@ -186,7 +186,7 @@ test.cb('nested resolve', t => {
 });
 
 test.cb('async resolve error', t => {
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   resolver.use('foo', function err(input, cb) {
     cb(new Error('fail'));
   });
@@ -201,7 +201,7 @@ test.cb('async resolve error', t => {
 });
 
 test.cb('sync resolve uncaught error', t => {
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   resolver.use('test', function err() {
     throw new Error('fail');
   });
@@ -216,7 +216,7 @@ test.cb('sync resolve uncaught error', t => {
 });
 
 test.cb('resolveFile', t => {
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   resolver.use('foo', foo);
   resolver.use('bar', bar);
 
@@ -236,7 +236,7 @@ test.cb('resolveFile', t => {
 });
 
 test.cb('resolveFile txt', t => {
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   resolver.use('foo', foo);
   resolver.use('bar', bar);
 
@@ -256,7 +256,7 @@ test.cb('resolveFile txt', t => {
 });
 
 test.cb('resolveFile error', t => {
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   resolver.resolveFile('./notfound.txt', function(err, actual) {
     t.assert(err);
     t.assert(!actual);
@@ -270,11 +270,11 @@ test.cb('resolveFile error', t => {
 });
 
 test.cb('stack', t => {
-  const parent = shortstop.create();
+  const parent = protocall.create();
   parent.use('foo', foo);
   parent.use('bar', bar);
 
-  const child = shortstop.create(parent);
+  const child = protocall.create(parent);
 
   const expected = require('./fixtures/test');
   child.resolve(expected, function(err, actual) {
@@ -300,7 +300,7 @@ test.cb('stack', t => {
 });
 
 test.cb('preserve types Buffer', t => {
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   resolver.resolve({buffer: Buffer.alloc(0)}, function(err, data) {
     t.falsy(err);
     t.assert(data);
@@ -311,7 +311,7 @@ test.cb('preserve types Buffer', t => {
 });
 
 test.cb('preserve types Date', t => {
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   resolver.resolve({date: new Date()}, function(err, data) {
     t.falsy(err);
     t.assert(data);
@@ -323,7 +323,7 @@ test.cb('preserve types Date', t => {
 });
 
 test.cb('preserve types RegExp', t => {
-  const resolver = shortstop.create();
+  const resolver = protocall.create();
   resolver.resolve({regexp: new RegExp('.')}, function(err, data) {
     t.falsy(err);
     t.assert(data);

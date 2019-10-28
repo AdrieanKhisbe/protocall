@@ -1,17 +1,17 @@
-# shortstop-handlers
+# protocall-handlers
 
 :rotating_light: FIXME: to incorporate into main README
 
 ```javascript
-const shortstop = require('shortstop');
+const protocall = require('protocall');
 
-const resolver = shortstop.create();
-resolver.use('path', shortstop.handlers.path(__dirname));
-resolver.use('file', shortstop.handlers.file(__dirname));
-resolver.use('base64', shortstop.handlers.base64());
-resolver.use('env', shortstop.handlers.env());
-resolver.use('require', shortstop.handlers.require(__dirname));
-resolver.use('exec', shortstop.handlers.exec(__dirname));
+const resolver = protocall.create();
+resolver.use('path', protocall.handlers.path(__dirname));
+resolver.use('file', protocall.handlers.file(__dirname));
+resolver.use('base64', protocall.handlers.base64());
+resolver.use('env', protocall.handlers.env());
+resolver.use('require', protocall.handlers.require(__dirname));
+resolver.use('exec', protocall.handlers.exec(__dirname));
 
 resolver.resolve(require('./myfile'), function (err, data) {
     // data
@@ -23,14 +23,14 @@ resolver.resolve(require('./myfile'), function (err, data) {
 
 * `basedir` (*String*, optional) - The base path used for resolving relative path values. Defaults to `caller` dirname.
 
-Creates a handler that can be given to shortstop to resolve file paths.
+Creates a handler that can be given to protocall to resolve file paths.
 
 ```javascript
 const foo = {
     "mydir": "path:./lib/dir"
 };
 
-const resolver = shortstop.create();
+const resolver = protocall.create();
 resolver.use('path', shortop.handlers.path());
 resolver.resolve(foo, function (err, data) {
   data.mydir; // `/path/to/my/project/lib/dir`
@@ -51,7 +51,7 @@ const foo = {
     "cert": "file:./cert.pem"
 };
 
-const resolver = shortstop.create();
+const resolver = protocall.create();
 resolver.use('file', shortop.handlers.file());
 resolver.resolve(foo, function (err, data) {
     foo.cert; // <Buffer 48 65 6c 6c 6f 2c 20 77 6f72 6c 64 21>
@@ -68,7 +68,7 @@ const foo = {
     "key": "base64:SGVsbG8sIHdvcmxkIQ=="
 };
 
-const resolver = shortstop.create();
+const resolver = protocall.create();
 resolver.use('base64', shortop.handlers.base64());
 resolver.resolve(foo, function (err, data) {
     data.key; // <Buffer 48 65 6c 6c 6f 2c 20 77 6f72 6c 64 21>
@@ -94,7 +94,7 @@ const foo = {
     "bat": "env:FALSY|!b"
 };
 
-const resolver = shortstop.create();
+const resolver = protocall.create();
 resolver.use('env', shortop.handlers.env());
 resolver.resolve(foo, function (err, data) {
     data.bar; // 'localhost'
@@ -120,7 +120,7 @@ const foo = {
     "json": "require:../config/myjson"
 };
 
-const resolver = shortstop.create();
+const resolver = protocall.create();
 resolver.use('require', shortop.handlers.require());
 resolver.resolve(foo, function (err, data) {
     data.path; // Node core `path` module
@@ -142,7 +142,7 @@ const foo = {
     "item2": "exec:./myothermodule"
 };
 
-const resolver = shortstop.create();
+const resolver = protocall.create();
 resolver.use('exec', shortop.handlers.exec(__dirname));
 resolver.resolve(foo, function (err, data) {
     data.item1; // the result of calling mymodule.create()
@@ -162,7 +162,7 @@ const foo = {
     "files": "glob:**/*.js"
 };
 
-const resolver = shortstop.create();
+const resolver = protocall.create();
 resolver.use('glob', shortop.handlers.glob(__dirname));
 resolver.resolve(foo, function (err, data) {
     data.files[0]; // '/my/dirname/foo/index.js';
