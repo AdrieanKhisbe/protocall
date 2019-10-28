@@ -1,6 +1,6 @@
 const test = require('ava');
 
-const handlers = require('../lib/handlers');
+const handlers = require('../src/handlers');
 
 test('base64', t => {
   const handler = handlers.base64();

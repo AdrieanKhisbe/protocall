@@ -5,7 +5,7 @@
     "html"
   ],
   "include": [
-      "lib/*.js",
+      "src/*.js",
       "index.js"
   ],
   "all": true

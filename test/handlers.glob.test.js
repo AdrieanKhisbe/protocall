@@ -1,7 +1,7 @@
 const path = require('path');
 const test = require('ava');
 
-const handlers = require('../lib/handlers');
+const handlers = require('../src/handlers');
 
 test('glob api', t => {
   const handler = handlers.glob();

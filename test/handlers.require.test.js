@@ -1,7 +1,7 @@
 const path = require('path');
 const test = require('ava');
 
-const handlers = require('../lib/handlers');
+const handlers = require('../src/handlers');
 
 const requireHandler = handlers.require(__dirname);
 

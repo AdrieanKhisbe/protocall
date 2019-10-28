@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const resolver = require('./lib/resolver');
+const resolver = require('./src/resolver');
 
 
 function isModule(file) {

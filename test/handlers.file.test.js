@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const test = require('ava');
 
-const handlers = require('../lib/handlers');
+const handlers = require('../src/handlers');
 
 test('file no config', t => {
   const handler = handlers.file();

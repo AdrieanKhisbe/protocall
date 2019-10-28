@@ -1,6 +1,6 @@
 const test = require('ava');
 
-const handlers = require('../lib/handlers');
+const handlers = require('../src/handlers');
 
 test('exec api', t => {
   const handler = handlers.exec(__dirname);
