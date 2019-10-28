@@ -20,6 +20,11 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
+  "files": [
+    "index.js",
+    "src",
+    "package.json"
+  ],
   "keywords": [
     "config",
     "configuration"
