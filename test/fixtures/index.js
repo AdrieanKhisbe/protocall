@@ -1,12 +1,12 @@
+/* eslint-disable lodash-fp/prefer-constant */
 'use strict';
 
-
 function myModule() {
-    return 'myModule';
+  return 'myModule';
 }
 
 myModule.myFunction = function myFunction() {
-    return 'myFunction';
+  return 'myFunction';
 };
 
 module.exports = myModule;
