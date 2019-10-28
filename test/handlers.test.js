@@ -3,7 +3,7 @@
 var fs = require('fs'),
     test = require('tape'),
     path = require('path'),
-    commons = require('../');
+    commons = require('../lib/handlers');
 
 
 test('shortstop-common', function (t) {

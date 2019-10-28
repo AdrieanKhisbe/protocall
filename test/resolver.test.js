@@ -2,7 +2,7 @@
 
 var test = require('tape');
 var path = require('path');
-var shortstop = require('../');
+var shortstop = require('..');
 
 
 test('shortstop', function (t) {
