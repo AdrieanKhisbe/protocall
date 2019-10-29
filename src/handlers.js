@@ -1,26 +1,21 @@
 const fs = require('fs');
-const path = require('path');
+const {dirname, resolve} = require('path');
 const thing = require('util');
-const glob = require('glob');
+const findGlob = require('glob');
 const caller = require('caller');
-
-function startsWith(haystack, needle) {
-  return haystack.indexOf(needle) === 0;
-}
 
 /**
  * Creates the protocol handler for the `path:` protocol
  * @param basedir
  * @returns {Function}
  */
-function _path(basedir) {
-  basedir = basedir || path.dirname(caller());
+function path(basedir) {
+  basedir = basedir || dirname(caller());
   return function pathHandler(file) {
-    if (path.resolve(file) === file) {
-      // Absolute path already, so just return it.
-      return file;
-    }
-    return path.resolve(basedir, ...file.split('/'));
+    // Absolute path already, so just return it.
+    if (resolve(file) === file) return file;
+
+    return resolve(basedir, ...file.split('/'));
   };
 }
 
@@ -30,13 +25,13 @@ function _path(basedir) {
  * @param options
  * @returns {Function}
  */
-function _file(basedir, options) {
+function file(basedir, options) {
   if (thing.isObject(basedir)) {
     options = basedir;
     basedir = undefined;
   }
 
-  const pathHandler = _path(basedir);
+  const pathHandler = path(basedir);
   options = options || {encoding: null, flag: 'r'};
 
   return function fileHandler(file, cb) {
@@ -48,7 +43,7 @@ function _file(basedir, options) {
  * Creates the protocol handler for the `buffer:` protocol
  * @returns {Function}
  */
-function _base64() {
+function base64() {
   return function base64Handler(value) {
     return Buffer.from(value, 'base64');
   };
@@ -58,7 +53,7 @@ function _base64() {
  * Creates the protocol handler for the `env:` protocol
  * @returns {Function}
  */
-function _env() {
+function env() {
   const filters = {
     d(value) {
       return parseInt(value, 10);
@@ -98,16 +93,12 @@ function _env() {
  * @returns {Function}
  */
 function _require(basedir) {
-  const resolvePath = _path(basedir);
+  const resolvePath = path(basedir);
   return function requireHandler(value) {
-    let _module = value;
-
+    const _module = /^\.{0,2}\//.test(value) ? resolvePath(value) : value;
+    // resolve if start with ../ ./ or /
     // @see http://nodejs.org/api/modules.html#modules_file_modules
-    if (startsWith(value, '/') || startsWith(value, './') || startsWith(value, '../')) {
-      // NOTE: Technically, paths with a leading '/' don't need to be resolved, but
-      // leaving for consistency.
-      _module = resolvePath(_module);
-    }
+    // NOTE: Technically, paths with a leading '/' don't need to be resolved, but leaving for consistency.
 
     // eslint-disable-next-line import/no-dynamic-require
     return require(_module);
@@ -119,17 +110,15 @@ function _require(basedir) {
  * @param basedir
  * @returns {Function}
  */
-function _exec(basedir) {
+function exec(basedir) {
   const require = _require(basedir);
   return function execHandler(value) {
-    const tuple = value.split('#');
+    const [modulePath, propertyName] = value.split('#');
     // eslint-disable-next-line import/no-dynamic-require
-    const _module = require(tuple[0]);
-    const method = tuple[1] ? _module[tuple[1]] : _module;
+    const _module = require(modulePath);
+    const method = propertyName ? _module[propertyName] : _module;
 
-    if (thing.isFunction(method)) {
-      return method();
-    }
+    if (thing.isFunction(method)) return method();
 
     throw new Error(`exec: unable to locate function in ${value}`);
   };
@@ -140,32 +129,22 @@ function _exec(basedir) {
  * @param options https://github.com/isaacs/node-glob#options
  * @returns {Function}
  */
-function _glob(options) {
+function glob(options) {
   if (thing.isString(options)) {
     options = {cwd: options};
   }
 
   options = options || {};
-  options.cwd = options.cwd || path.dirname(caller());
+  options.cwd = options.cwd || dirname(caller());
 
-  const resolvePath = _path(options.cwd);
+  const resolvePath = path(options.cwd);
   return function globHandler(value, cb) {
-    glob(value, options, function(err, data) {
-      if (err) {
-        cb(err);
-        return;
-      }
+    findGlob(value, options, function(err, data) {
+      if (err) return cb(err);
+
       cb(null, data.map(resolvePath));
     });
   };
 }
 
-module.exports = {
-  path: _path,
-  file: _file,
-  base64: _base64,
-  env: _env,
-  require: _require,
-  exec: _exec,
-  glob: _glob
-};
+module.exports = {path, file, base64, env, require: _require, exec, glob};
