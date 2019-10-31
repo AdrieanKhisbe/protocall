@@ -9,9 +9,12 @@
 pids
 logs
 results
+.nyc_output
 coverage
 lib-cov
 xunit.xml
+
+.npmrc
 node_modules
 npm-debug.log
 
@@ -25,5 +28,5 @@ ehthumbs.db
 Icon?
 Thumbs.db
 
-coverage
-.nyc_output
+tmp
+private
