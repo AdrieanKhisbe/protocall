@@ -47,12 +47,11 @@
   "devDependencies": {
     "@-k/eslint-plugin": "^0.2.0",
     "ava": "^2.4.0",
-    "codecov": "^3.3.0",
+    "codecov": "^3.6.1",
     "eslint": "^6.6.0",
     "lodash": "^4.17.15",
     "np": "^5.1.2",
-    "nyc": "^13.3.0",
-    "tape": "~4.10.1"
+    "nyc": "^14.1.1"
   },
   "ava": {
     "files": [
