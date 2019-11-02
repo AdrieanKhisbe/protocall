@@ -4,35 +4,34 @@
 [![Build Status](https://travis-ci.com/omni-tools/protocall.svg?branch=master)](https://travis-ci.com/omni-tools/protocall)
 [![codecov](https://codecov.io/gh/omni-tools/protocall/branch/master/graph/badge.svg)](https://codecov.io/gh/omni-tools/protocall)
 
-> Use of _Protocalls_ in your json configuration
+> Use of _“Protocall”s_ in your json configuration
 
 Sometimes JSON just isn't enough for configuration needs. Occasionally it would be nice to use arbitrary types as values,
-but JSON is necessarily a subset of all available JS types. `protocall` enables the use of protocols and handlers to
-enable identification and special handling of json values.
+but JSON is necessarily a subset of all available JS types.
 
-:warning: This is was initially a fork from [shortstop](https://github.com/krakenjs/protocall)
+`protocall` enables the use of protocols and handlers to enable identification and special handling of json values.
 
-```javascript
-const fs = require('fs');
+:warning: This is was initially a fork from [shortstop](https://github.com/krakenjs/shortstop) and [shortstop-handlers](https://github.com/krakenjs/shortstop-handlers)
+
+
+## Basic Usage
+
+Just create a resolver, then use it to resolve your config as objects with `resolve` or as files with `resolveFile`.
+You can either create a resolver with `protocall.create()` and then [customize it](#resolveruse),
+or just use default provided resolver `protocall.getDefaultResolver()`
+
+```js
 const protocall = require('protocall');
-
-function buffer(value) {
-    return new Buffer(value);
-}
-
-const resolver = protocall.create();
-resolver.use('buffer', buffer);
-resolver.use('file', fs.readFile);
-
-const json = {
-    "secret": "buffer:SGVsbG8sIHdvcmxkIQ==",
-    "ssl": {
-        "pfx": "file:foo/bar",
-        "key": "file:foo/baz.key",
+const resolver = protocall.getDefaultResolver();
+const config = {
+    secret: "base64:SGVsbG8sIHdvcmxkIQ==",
+    ssl: {
+        pfx: "file:foo/bar",
+        key: "file:foo/baz.key"
     }
 };
 
-resolver.resolve(json, function (err, data) {
+resolver.resolve(protocall, (err, data) => {
     console.log(data);
     // {
     //     "secret": <Buffer ... >,
@@ -42,15 +41,107 @@ resolver.resolve(json, function (err, data) {
     //     }
     // }
 });
+
 ```
 
-## API
-### protocall.create([parent]);
+## (Default) Handlers
 
-* `parent` (*Object*, optional) - An optional protocall resolver. Returns a resolver instance.
+Here is the default handlers from [shortstop-handlers](https://github.com/krakenjs/shortstop-handlers).
+All these are loaded by the `getDefaultResolver`
+- [path](#path)
+- [file](#file)
+- [base63](#base64)
+- [env](#env)
+- [require](#require)
+- [exec](#exec)
+- [glob](#glob)
+
+### path
+`protocall.handlers.path([basedir])`
+* `basedir` (*String*, optional) - The base path used for resolving relative path values. Defaults to `caller` dirname.
+
+Creates a handler that can be given to protocall to resolve file paths.
+
+### file
+`protocall.handlers.file([basedir], [options])`
+
+* `basedir` (*String*, optional) - The base path used for resolving relative path values. Defaults to `caller` dirname.
+* `options` (*Object*, optional) - Options object provided to fs.readFile.
+
+Creates a handler which resolves the provided value to the basedir and returns the contents of the file as a Buffer.
 
 
-### resolver.use(protocol, handler);
+### base64
+`protocall.handlers.base64()`
+
+Creates a handler which will return a buffer containing the content of the base64-encoded string.
+
+
+### env
+`protocall.handlers.env()`
+
+Creates a handler which will resolve the provided value as an environment variable, optionally casting the value using the provided filter. Supported filters are `|d`, `|b`, and `|!b` which will cast to Number and Boolean types respectively.
+
+Examples:
+```json
+{
+    "string": "env:HOST",
+    "numver": "env:PORT|d",
+    "true": "env:ENABLED|b",
+    "false": "env:FALSY|b",
+    "notFalse": "env:FALSY|!b"
+}
+```
+
+### require
+`protocall.handlers.require([basedir])`
+
+* `basedir` (*String*, optional) - The base path used for resolving relative path values. Defaults to `caller` dirname.
+
+Creates a handler which resolves and loads, and returns the specified module.
+
+Examples:
+```json
+ {
+    "path": "require:path",
+    "minimist": "require:minimist",
+    "mymodule": "require:./mymodule",
+    "json": "require:../config/myjson"
+}
+```
+
+
+### exec
+`protocall.handlers.exec([basedir])`
+
+* `basedir` (*String*, optional) - The base path used for resolving relative path values. Defaults to `caller` dirname.
+
+Creates a handler which resolves and loads the specified module, executing the method (if specified) or the module itself, using the return value as the resulting value. The value should have the format `{module}(#{method})?`. If no function is able to be found this handler will throw with an error.
+
+```json
+{
+    "functionFromModule": "exec:./mymodule#create",
+    "module": "exec:./myothermodule"
+};
+```
+
+### glob
+`protocall.handlers.glob([basedir|options])`
+
+* `basedir` (*String* or *Object*, optional) - The base path use for resolving or a `glob` options object per https://github.com/isaacs/node-glob#options
+
+Creates a handler which match files using the patterns the shell uses.
+```json
+{
+    "files": "glob:**/*.js"
+}
+```
+
+## Resolver API
+Basicly a resolver enable you to register new protocalls/handlers, and to resolve object(`resolve`) or files(`resolveFile`)
+
+## resolver.use
+`resolver.use(protocol, handler)`
 
 * `protocol` (*String*) - The protocol used to identify a property to be processed, e.g. "file"
 * `handler` (*Function*) - The implementation of the given protocol with signature `function (value, [callback])`
@@ -58,43 +149,44 @@ resolver.resolve(json, function (err, data) {
 This method returns a function when invoked will remove the handler from the stack for this protocol.
 
 
-### resolver.resolve(data, callback);
+```js
+const protocall = require('protocall');
+
+const resolver = protocall.create();
+resolver.use('path', protocall.handlers.path);
+resolver.use('file', protocall.handlers.file);
+```
+
+## resolve.resolve
+`resolver.resolve(data, callback)`
 
 * `data` (*Object*) - The object, containing protocols in values, to be processed.
 * `callback` (*Function*) - The callback invoked when the processing is complete with signature `function (err, result)`.
 
 
-### resolver.resolveFile(path, callback);
+## resolve.resolveFile
+`resolver.resolveFile(path, callback);`
 
 * `path` (*String*) - The path to a file which is, or exports, JSON or a javascript object.
 * `callback` (*Function*) - The callback invoked when the processing is complete with signature `function (err, result)`.
 
+## Advanced resolver usage
 
-## Multiple handlers
+### Multiple handlers
 Multiple handlers can be registered for a given protocol. They will be executed in the order registered and the output
 of one handler will be the input of the next handler in the chain.
 
-```javascript
-const fs = require('fs');
-const path = require('path');
+```js
 const protocall = require('protocall');
 
-function resolve(value) {
-    if (path.resolve(value) === value) {
-        // Is absolute path already
-        return value;
-    }
-    return path.join(process.cwd(), value);
-}
-
 const resolver = protocall.create();
-resolver.use('path', resolve);
-resolver.use('file', resolve);
+resolver.use('path', protocall.handlers.resolve);
+resolver.use('file', protocall.handlers.resolve);
 resolver.use('file', fs.readFile);
 
-const json = {
-    "key": "file:foo/baz.key",
-    "certs": "path:certs/myapp"
+const config = {
+    key: 'file:foo/baz.key',
+    certs: 'path:certs/myapp'
 };
 
 resolver.resolve(json, function (err, data) {
@@ -107,40 +199,27 @@ resolver.resolve(json, function (err, data) {
 ```
 
 
-## Removing Handlers
+### Removing Handlers
 
 When registered, handlers return an `unregister` function you can call when you no longer want a handler in the chain.
 
-```javascript
+```js
 const path = require('path');
 const protocall = require('protocall');
 
-
-function resolve(value) {
-    if (path.resolve(value) === value) {
-        // Is absolute path already
-        return value;
-    }
-    return path.join(process.cwd(), value);
-}
-
 const resolver = protocall.create();
-const unuse = resolver.use('path', resolve);
-const json = { "key": "path:foo/baz.key" };
+const unusePathProtocall = resolver.use('path', protocall.handlers.resolve);
+const config = {key: 'path:foo/baz.key'};
 
-resolver.resolve(json, function (err, data) {
+resolver.resolve(config, function (err, data) {
     console.log(data);
-    // {
-    //     "key": "/path/to/my/foo/baz.key"
-    // }
+    // {   "key": "/path/to/my/foo/baz.key"  }
 
-    unuse();
+    unusePathProtocall();
 
     resolver.resolve(json, function (err, data) {
         console.log(data);
-        // {
-        //     "key": "path:foo/baz.key"
-        // }
+        // { "key": "path:foo/baz.key"  }
     });
 });
 ```
