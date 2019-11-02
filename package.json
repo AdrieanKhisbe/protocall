@@ -45,10 +45,10 @@
     "glob": "^7.1.5"
   },
   "devDependencies": {
-    "@-k/eslint-plugin": "^0.1.2",
+    "@-k/eslint-plugin": "^0.2.0",
     "ava": "^2.4.0",
     "codecov": "^3.3.0",
-    "eslint": "^5.16.0",
+    "eslint": "^6.6.0",
     "lodash": "^4.17.15",
     "np": "^5.1.2",
     "nyc": "^13.3.0",
