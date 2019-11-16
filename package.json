@@ -42,14 +42,14 @@
   "dependencies": {
     "async": "~2.6.2",
     "caller": "^1.0.1",
-    "glob": "^7.1.5"
+    "glob": "^7.1.5",
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
     "@-k/eslint-plugin": "^0.2.0",
     "ava": "^2.4.0",
     "codecov": "^3.6.1",
     "eslint": "^6.6.0",
-    "lodash": "^4.17.15",
     "np": "^5.1.2",
     "nyc": "^14.1.1"
   },

@@ -1,6 +1,6 @@
 const fs = require('fs');
-const {dirname, resolve} = require('path');
-const thing = require('util');
+const {dirname, resolve} = require('path'); // TODO: unfold
+const _ = require('lodash/fp');
 const findGlob = require('glob');
 const caller = require('caller');
 
@@ -26,7 +26,7 @@ function path(basedir) {
  * @returns {Function}
  */
 function file(basedir, options) {
-  if (thing.isObject(basedir)) {
+  if (_.isObject(basedir)) {
     options = basedir;
     basedir = undefined;
   }
@@ -118,7 +118,7 @@ function exec(basedir) {
     const _module = require(modulePath);
     const method = propertyName ? _module[propertyName] : _module;
 
-    if (thing.isFunction(method)) return method();
+    if (_.isFunction(method)) return method();
 
     throw new Error(`exec: unable to locate function in ${value}`);
   };
@@ -130,7 +130,7 @@ function exec(basedir) {
  * @returns {Function}
  */
 function glob(options) {
-  if (thing.isString(options)) {
+  if (_.isString(options)) {
     options = {cwd: options};
   }
 

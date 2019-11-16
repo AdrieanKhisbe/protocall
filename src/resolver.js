@@ -1,4 +1,4 @@
-const thing = require('util');
+const _ = require('lodash/fp');
 const async = require('async');
 
 exports.create = function create(parent) {
@@ -107,11 +107,8 @@ exports.create = function create(parent) {
         filename = null;
       }
 
-      if (
-        thing.isArray(data) ||
-        (thing.isObject(data) && Object.getPrototypeOf(data) === Object.prototype)
-      ) {
-        if (thing.isArray(data)) {
+      if (_.isArray(data) || _.isPlainObject(data)) {
+        if (_.isArray(data)) {
           tasks = data.map(val => resolve.bind(this, val, filename));
         } else {
           tasks = {};
@@ -123,7 +120,7 @@ exports.create = function create(parent) {
         async.parallel(tasks, function(err, data) {
           err ? callback(err) : callback(null, data);
         });
-      } else if (thing.isString(data)) {
+      } else if (_.isString(data)) {
         tasks = [];
 
         handler = this.getHandler(data);
