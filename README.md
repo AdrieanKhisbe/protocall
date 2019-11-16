@@ -31,7 +31,7 @@ const config = {
     }
 };
 
-resolver.resolve(protocall, (err, data) => {
+resolver.resolve(config, (err, data) => {
     console.log(data);
     // {
     //     "secret": <Buffer ... >,
@@ -41,11 +41,22 @@ resolver.resolve(protocall, (err, data) => {
     //     }
     // }
 });
-
+// Or using the promise returned...
+resolver.resolve(config).then(data => {
+    // Do something with the 'data
+});
 ```
 
 ## (Default) Handlers
 
+A handler can be either a function taking value and a callback, or just take some value and return directly the value or a promise:
+```js
+const handlerIdentityOne = (value, cb) => cb(null, value);
+const handlerIdentityTwo = value => value;
+const handlerIdentityThree = value => Promise.resolve(value);
+```
+
+Protocall is shipped with already defined handlers.
 Here is the default handlers from [shortstop-handlers](https://github.com/krakenjs/shortstop-handlers).
 All these are loaded by the `getDefaultResolver`
 - [path](#path)
@@ -55,6 +66,7 @@ All these are loaded by the `getDefaultResolver`
 - [require](#require)
 - [exec](#exec)
 - [glob](#glob)
+
 
 ### path
 `protocall.handlers.path([basedir])`
@@ -140,7 +152,10 @@ Creates a handler which match files using the patterns the shell uses.
 ## Resolver API
 Basicly a resolver enable you to register new protocalls/handlers, and to resolve object(`resolve`) or files(`resolveFile`)
 
-## resolver.use
+### `resolver.use`
+There is two accepted signatures:
+
+#### single protocol handler
 `resolver.use(protocol, handler)`
 
 * `protocol` (*String*) - The protocol used to identify a property to be processed, e.g. "file"
@@ -148,27 +163,45 @@ Basicly a resolver enable you to register new protocalls/handlers, and to resolv
 
 This method returns a function when invoked will remove the handler from the stack for this protocol.
 
+```js
+const protocall = require('protocall');
+
+const resolver = protocall.create();
+resolver.use('path', protocall.handlers.path());
+resolver.use('file', protocall.handlers.file());
+```
+#### multiple protocol handlers
+`resolver.use(protocolsToHandlers)`
+
+* `protocolToHandlers` (*Object*) - An object mapping of protocol name to handler.
+
+This method returns an object mapping protocol to their unsuscribing function
 
 ```js
 const protocall = require('protocall');
 
 const resolver = protocall.create();
-resolver.use('path', protocall.handlers.path);
-resolver.use('file', protocall.handlers.file);
+resolver.use({
+    path: protocall.handlers.path(),
+    file: protocall.handlers.file()
+});
 ```
 
-## resolve.resolve
-`resolver.resolve(data, callback)`
+### `resolve.resolve`
+`resolver.resolve(data, [callback])`
 
 * `data` (*Object*) - The object, containing protocols in values, to be processed.
-* `callback` (*Function*) - The callback invoked when the processing is complete with signature `function (err, result)`.
+* `callback` (*Function*) - Optional callback invoked when the processing is complete with signature `function (err, result)`.
 
+Return a promise that is resolved to the processed data.
 
-## resolve.resolveFile
-`resolver.resolveFile(path, callback);`
+### `resolve.resolveFile`
+`resolver.resolveFile(path, [callback]);`
 
 * `path` (*String*) - The path to a file which is, or exports, JSON or a javascript object.
-* `callback` (*Function*) - The callback invoked when the processing is complete with signature `function (err, result)`.
+* `callback` (*Function*) - Optional callback invoked when the processing is complete with signature `function (err, result)`.
+
+Return a promise that is resolved to the processed data.
 
 ## Advanced resolver usage
 
@@ -184,10 +217,7 @@ resolver.use('path', protocall.handlers.resolve);
 resolver.use('file', protocall.handlers.resolve);
 resolver.use('file', fs.readFile);
 
-const config = {
-    key: 'file:foo/baz.key',
-    certs: 'path:certs/myapp'
-};
+const config = {key: 'file:foo/baz.key', certs: 'path:certs/myapp'};
 
 resolver.resolve(json, function (err, data) {
     console.log(data);
@@ -209,6 +239,7 @@ const protocall = require('protocall');
 
 const resolver = protocall.create();
 const unusePathProtocall = resolver.use('path', protocall.handlers.resolve);
+
 const config = {key: 'path:foo/baz.key'};
 
 resolver.resolve(config, function (err, data) {
