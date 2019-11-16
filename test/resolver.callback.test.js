@@ -1,5 +1,6 @@
 const path = require('path');
 const test = require('ava');
+const _ = require('lodash/fp');
 const protocall = require('..');
 
 function foo(input) {
@@ -124,13 +125,13 @@ test.cb('resolve', t => {
   resolver.use('foo', foo);
   resolver.use('bar', bar);
 
-  const expected = {foo: 'foo:foo', bar: 'bar:bar', baz: false};
-  resolver.resolve(expected, function resolve(err, actual) {
+  const source = {foo: 'foo:foo', bar: 'bar:bar', baz: false};
+  resolver.resolve(source, function resolve(err, actual) {
     t.falsy(err);
     t.is(actual.foo, 'foo_foo');
     t.is(actual.bar, 'bar_bar');
     t.is(actual.baz, false);
-    t.not(actual, expected);
+    t.not(actual, source);
     t.end();
   });
 });
@@ -142,13 +143,13 @@ test.cb('resolve with filename', t => {
     cb(null, file + data);
   });
 
-  const expected = {foo: 'foo:foo', bar: 'bar:bar', baz: false};
-  resolver.resolve(expected, __filename, function resolve(err, actual) {
+  const source = {foo: 'foo:foo', bar: 'bar:bar', baz: false};
+  resolver.resolve(source, __filename, function resolve(err, actual) {
     t.falsy(err);
     t.is(actual.foo, 'foo_foo');
     t.is(actual.bar, `${__filename}bar`);
     t.is(actual.baz, false);
-    t.not(actual, expected);
+    t.not(actual, source);
     t.end();
   });
 });
@@ -158,7 +159,7 @@ test.cb('nested resolve', t => {
   resolver.use('foo', foo);
   resolver.use('bar', bar);
 
-  const expected = {
+  const source = {
     foo: 'bar',
     truthy: true,
     falsy: false,
@@ -170,13 +171,13 @@ test.cb('nested resolve', t => {
     }
   };
 
-  resolver.resolve(expected, function resolve(err, actual) {
+  resolver.resolve(source, function resolve(err, actual) {
     t.falsy(err);
-    t.not(actual, expected);
-    t.is(actual.foo, expected.foo);
-    t.is(actual.truthy, expected.truthy);
-    t.is(actual.falsy, expected.falsy);
-    t.is(actual.numeric, expected.numeric);
+    t.not(actual, source);
+    t.is(actual.foo, source.foo);
+    t.is(actual.truthy, source.truthy);
+    t.is(actual.falsy, source.falsy);
+    t.is(actual.numeric, source.numeric);
     t.is(actual.call, 'maybe_foo');
     t.is(actual.i.came, 'in_bar');
     t.is(actual.i.like[0], 'a_foo');
@@ -191,8 +192,8 @@ test.cb('async resolve error', t => {
     cb(new Error('fail'));
   });
 
-  const expected = {foo: 'foo:foo', bar: false};
-  resolver.resolve(expected, function resolve(err, actual) {
+  const source = {foo: 'foo:foo', bar: false};
+  resolver.resolve(source, function resolve(err, actual) {
     t.assert(err);
     t.is(err.message, 'fail');
     t.falsy(actual);
@@ -206,8 +207,8 @@ test.cb('sync resolve uncaught error', t => {
     throw new Error('fail');
   });
 
-  const expected = {foo: 'test:foo', bar: false};
-  resolver.resolve(expected, function resolve(err, actual) {
+  const source = {foo: 'test:foo', bar: false};
+  resolver.resolve(source, function resolve(err, actual) {
     t.assert(err);
     t.is(err.message, 'fail');
     t.assert(!actual);
@@ -220,13 +221,13 @@ test.cb('resolveFile', t => {
   resolver.use('foo', foo);
   resolver.use('bar', bar);
 
-  const expected = require('./fixtures/test');
+  const source = require('./fixtures/test');
   resolver.resolveFile(path.resolve(__dirname, './fixtures/test'), function resolve(err, actual) {
     t.falsy(err);
-    t.is(actual.foo, expected.foo);
-    t.is(actual.truthy, expected.truthy);
-    t.is(actual.falsy, expected.falsy);
-    t.is(actual.numeric, expected.numeric);
+    t.is(actual.foo, source.foo);
+    t.is(actual.truthy, source.truthy);
+    t.is(actual.falsy, source.falsy);
+    t.is(actual.numeric, source.numeric);
     t.is(actual.call, 'maybe_foo');
     t.is(actual.i.came, 'in_bar');
     t.is(actual.i.like[0], 'a_foo');
@@ -240,13 +241,13 @@ test.cb('resolveFile txt', t => {
   resolver.use('foo', foo);
   resolver.use('bar', bar);
 
-  const expected = require('./fixtures/test');
+  const source = require('./fixtures/test');
   resolver.resolveFile(path.resolve(__dirname, './fixtures/test.txt'), function(err, actual) {
     t.falsy(err);
-    t.is(actual.foo, expected.foo);
-    t.is(actual.truthy, expected.truthy);
-    t.is(actual.falsy, expected.falsy);
-    t.is(actual.numeric, expected.numeric);
+    t.is(actual.foo, source.foo);
+    t.is(actual.truthy, source.truthy);
+    t.is(actual.falsy, source.falsy);
+    t.is(actual.numeric, source.numeric);
     t.is(actual.call, 'maybe_foo');
     t.is(actual.i.came, 'in_bar');
     t.is(actual.i.like[0], 'a_foo');
@@ -276,10 +277,10 @@ test.cb('stack', t => {
 
   const child = protocall.create(parent);
 
-  const expected = require('./fixtures/test');
-  child.resolve(expected, function(err, actual) {
+  const source = require('./fixtures/test');
+  child.resolve(source, function(err, actual) {
     t.falsy(err);
-    t.not(actual, expected);
+    t.not(actual, source);
     t.is(actual.call, 'maybe_foo');
     t.is(actual.i.came, 'in_bar');
     t.is(actual.i.like[0], 'a_foo');
@@ -288,7 +289,7 @@ test.cb('stack', t => {
     child.use('foo', foo);
     child.use('bar', bar);
 
-    child.resolve(expected, function(err, actual) {
+    child.resolve(source, function(err, actual) {
       t.falsy(err);
       t.is(actual.call, 'maybe_foo_foo');
       t.is(actual.i.came, 'in_bar_bar');
@@ -316,8 +317,7 @@ test.cb('preserve types Date', t => {
     t.falsy(err);
     t.assert(data);
     t.assert(data.date);
-    t.assert(data.date.constructor === Date);
-    t.assert(Object.getPrototypeOf(data.date) !== Object.prototype);
+    t.assert(_.isDate(data.date));
     t.end();
   });
 });
@@ -328,8 +328,7 @@ test.cb('preserve types RegExp', t => {
     t.falsy(err);
     t.assert(data);
     t.assert(data.regexp);
-    t.assert(data.regexp.constructor === RegExp);
-    t.assert(Object.getPrototypeOf(data.regexp) !== Object.prototype);
+    t.assert(_.isRegExp(data.regexp));
     t.end();
   });
 });
