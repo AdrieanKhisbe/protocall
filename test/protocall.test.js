@@ -3,6 +3,17 @@ const test = require('ava');
 const protocall = require('..');
 
 test('getDefaultResolver', async t => {
+  const resolver = protocall.getDefaultResolver();
+  const config = {
+    base64: 'base64:cHJvdG8gY2FsbA==',
+    env: 'env:NODE_ENV'
+  };
+  const resolvedConfig = await resolver.resolve(config);
+  t.is(resolvedConfig.env, 'test');
+  t.deepEqual(resolvedConfig.base64, Buffer.from('proto call'));
+});
+
+test('getDefaultResolver with dirname', async t => {
   const protocallFolder = path.dirname(__dirname);
   const resolver = protocall.getDefaultResolver(protocallFolder);
   const config = {

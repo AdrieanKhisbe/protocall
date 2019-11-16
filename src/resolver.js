@@ -44,8 +44,8 @@ class Resolver {
    */
   getHandlers(protocol) {
     const handlers = this._handlers[protocol] || [];
-    const parentHandlers = this.parent && this.parent.getHandlers(protocol);
-    return _.concat(parentHandlers || [], handlers || []);
+    const parentHandlers = this.parent ? this.parent.getHandlers(protocol) : [];
+    return _.concat(parentHandlers, handlers);
   }
 
   /**
@@ -55,10 +55,16 @@ class Resolver {
    * @returns {Function} invoke to remove the registered handler from the stack
    */
   use(protocol, handler) {
+    if (_.isArray(handler)) return handler.map(_handler => this.use(protocol, _handler));
     if (_.isPlainObject(protocol)) {
       return _.pipe(
         _.toPairs,
-        _.map(([key, implem]) => [key, this.use(key, implem)]),
+        _.map(([key, handlers]) => [
+          key,
+          _.isArray(handlers)
+            ? handlers.map(handler => this.use(key, handler))
+            : this.use(key, handlers)
+        ]),
         _.fromPairs
       )(protocol);
     }

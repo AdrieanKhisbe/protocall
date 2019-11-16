@@ -5,14 +5,17 @@ const {Resolver} = require('..');
 function foo(input) {
   return `${input}_foo`;
 }
+function bar(input) {
+  return `${input}_bar`;
+}
 
 test('resolver', t => {
   const resolver = new Resolver();
   t.is(typeof resolver, 'object');
 
-  t.assert(_.isFunction(resolver.use));
-  t.assert(_.isFunction(resolver.resolve));
-  t.assert(_.isFunction(resolver.resolveFile));
+  t.true(_.isFunction(resolver.use), 'use is not a function');
+  t.true(_.isFunction(resolver.resolve), 'resolve is not a function');
+  t.true(_.isFunction(resolver.resolveFile), 'resolveFile is not a function');
 });
 
 test('resolver with parent', t => {
@@ -40,10 +43,42 @@ test('resolver with handlers also', t => {
 
 test('use', t => {
   const resolver = new Resolver();
-  resolver.use('foo', foo);
+  const unsubscriber = resolver.use('foo', foo);
 
   t.is(typeof resolver._handlers['foo'], 'object');
   t.is(resolver._handlers['foo'].length, 1);
+  t.true(_.isFunction(unsubscriber));
+});
+
+test('use with object', t => {
+  const resolver = new Resolver();
+  const unsuscribers = resolver.use({foo, bar});
+
+  t.is(typeof resolver._handlers['foo'], 'object');
+  t.is(resolver._handlers['foo'].length, 1);
+  t.is(typeof resolver._handlers['bar'], 'object');
+  t.is(resolver._handlers['bar'].length, 1);
+  t.true(_.isPlainObject(unsuscribers));
+  t.true(_.isFunction(unsuscribers.foo));
+  t.true(_.isFunction(unsuscribers.bar));
+});
+
+test('use with object and array', t => {
+  const resolver = new Resolver();
+  const unsuscribers = resolver.use({foo: [foo, foo]});
+
+  t.is(typeof resolver._handlers['foo'], 'object');
+  t.is(resolver._handlers['foo'].length, 2);
+  t.assert(_.isPlainObject(unsuscribers) && unsuscribers.foo.length === 2);
+});
+
+test('use with array of handlers', t => {
+  const resolver = new Resolver();
+  const unsuscribers = resolver.use('foobar', [foo, bar]);
+
+  t.is(typeof resolver._handlers['foobar'], 'object');
+  t.is(resolver._handlers['foobar'].length, 2);
+  t.true(unsuscribers && unsuscribers.length === 2);
 });
 
 test('unuse', t => {
