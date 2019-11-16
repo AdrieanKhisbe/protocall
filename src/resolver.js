@@ -102,34 +102,28 @@ class Resolver {
     if (_.isPlainObject(data))
       return async.parallel(_.mapValues(value => this.resolve.bind(this, value, filename), data));
 
-    if (_.isString(data)) {
-      const handler = this.getHandler(data);
-      if (!handler) return data;
+    if (!_.isString(data))
+      // Non-protocol-able value
+      return Promise.resolve(data);
 
-      // Remove protocol prefix
-      const content = data.slice(handler.protocol.length + 1);
+    const handler = this.getHandler(data);
+    if (!handler) return data;
 
-      const tasks = this.getStack(handler.protocol).map(handlerInStack => {
-        if (handlerInStack.length >= 2) return handlerInStack;
-        // If the handler is single argument, expect its return value to be useful,
-        // so we wrap it up in continuation-passing style
-        return async input => handlerInStack(input);
-      });
+    // Remove protocol prefix
+    const content = data.slice(handler.protocol.length + 1);
 
-      const bootsrapTask =
-        tasks[0].length == 2
-          ? function init(done) {
-              done(null, content);
-            }
-          : function init(done) {
-              done(null, content, filename);
-            };
+    const tasks = this.getStack(handler.protocol).map(handlerInStack => {
+      if (handlerInStack.length >= 2) return handlerInStack;
+      // If the handler is single argument, expect its return value to be useful,
+      // so we wrap it up in continuation-passing style
+      return async input => handlerInStack(input);
+    });
 
-      // Waterfall will *always* resolve asynchronously
-      return async.waterfall([bootsrapTask, ...tasks]);
-    }
-    // Non-protocol-able value
-    return Promise.resolve(data);
+    const bootsrapTask =
+      tasks[0].length == 2 // does Initial Task Needs Filename
+        ? cb => cb(null, content)
+        : cb => cb(null, content, filename);
+    return async.waterfall([bootsrapTask, ...tasks]);
   }
 
   /**
