@@ -76,31 +76,26 @@ class Resolver {
         _.fromPairs
       )(protocol);
     }
-    const handlers = this._handlers;
-    let handler = handlers[protocol];
-
-    if (!handler) {
-      handler = handlers[protocol] = {
+    if (!_.has(protocol, this._handlers)) {
+      this._handlers[protocol] = {
         protocol,
-
         regex: new RegExp(`^${protocol}:`),
-
         predicate(value) {
           return this.regex.test(value);
         },
-
         stack: []
       };
     }
 
+    const handler = this._handlers[protocol];
     handler.stack.push(implementation);
     let removed = false;
 
     return function unuse() {
       if (!removed) {
         removed = true;
-        const idx = handler.stack.indexOf(implementation);
-        return handler.stack.splice(idx, 1)[0];
+        const index = handler.stack.indexOf(implementation);
+        return handler.stack.splice(index, 1)[0];
       }
       return undefined;
     };
