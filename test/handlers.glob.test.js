@@ -6,38 +6,32 @@ const handlers = require('../src/handlers');
 test('glob api', t => {
   const handler = handlers.glob();
   t.is(typeof handler, 'function');
-  t.is(handler.length, 2);
+  t.is(handler.length, 1);
 });
 
-test.cb('glob basedir', t => {
+test('glob basedir', async t => {
   const basedir = path.join(__dirname, 'fixtures');
   const handler = handlers.glob(basedir);
 
   const expected = [path.join(basedir, 'index.js')];
 
-  handler('**/*.js', function(err, actual) {
-    t.falsy(err);
-    t.is(actual.length, expected.length);
-    t.is(actual[0], expected[0]);
-    t.end();
-  });
+  const actual = await handler('**/*.js');
+  t.is(actual.length, expected.length);
+  t.is(actual[0], expected[0]);
 });
 
-test.cb('glob options object', t => {
+test('glob options object', async t => {
   const basedir = path.join(__dirname, 'fixtures');
   const handler = handlers.glob({cwd: basedir});
 
   const expected = [path.join(basedir, 'index.js')];
 
-  handler('**/*.js', function(err, actual) {
-    t.is(err, null);
-    t.is(actual.length, expected.length);
-    t.is(actual[0], expected[0]);
-    t.end();
-  });
+  const actual = await handler('**/*.js');
+  t.is(actual.length, expected.length);
+  t.is(actual[0], expected[0]);
 });
 
-test.cb('glob no options', t => {
+test('glob no options', async t => {
   const handler = handlers.glob();
 
   // Test no basedir
@@ -46,20 +40,14 @@ test.cb('glob no options', t => {
     path.join(__dirname, 'fixtures', 'test.txt')
   ];
 
-  handler('**/*.txt', function(err, actual) {
-    t.is(err, null);
-    t.deepEqual(actual, expected);
-    t.end();
-  });
+  const actual = await handler('**/*.txt');
+  t.deepEqual(actual, expected);
 });
 
-test.cb('glob no match', t => {
+test('glob no match', async t => {
   const handler = handlers.glob();
 
   // Test no basedir
-  handler('**/*.xls', function(err, actual) {
-    t.is(err, null);
-    t.is(actual.length, 0);
-    t.end();
-  });
+  const actual = await handler('**/*.xls');
+  t.is(actual.length, 0);
 });

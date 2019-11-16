@@ -65,10 +65,10 @@ class Resolver {
   /**
    * Register a given handler for the provided protocol.
    * @param protocol the protocol for which the handler should be registered.
-   * @param impl the handler function with the signature `function (input, [fn])`
+   * @param implementation the handler function with the signature `function (input, [fn])`
    * @returns {Function} invoke to remove the registered handler from the stack
    */
-  use(protocol, impl) {
+  use(protocol, implementation) {
     const handlers = this._handlers;
     let handler = handlers[protocol];
 
@@ -86,13 +86,13 @@ class Resolver {
       };
     }
 
-    handler.stack.push(impl);
+    handler.stack.push(implementation);
     let removed = false;
 
     return function unuse() {
       if (!removed) {
         removed = true;
-        const idx = handler.stack.indexOf(impl);
+        const idx = handler.stack.indexOf(implementation);
         return handler.stack.splice(idx, 1)[0];
       }
       return undefined;

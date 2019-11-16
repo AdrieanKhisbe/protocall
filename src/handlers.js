@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const _ = require('lodash/fp');
-const findGlob = require('glob');
+const globby = require('globby');
 const callsites = require('callsites');
 
 const getCallerFolder = () => {
@@ -143,12 +143,8 @@ function glob(options) {
   options.cwd = options.cwd || getCallerFolder();
 
   const resolvePath = _path(options.cwd);
-  return function globHandler(value, cb) {
-    findGlob(value, options, function(err, data) {
-      if (err) return cb(err);
-
-      cb(null, data.map(resolvePath));
-    });
+  return function globHandler(value) {
+    return globby(value, options).then(paths => paths.map(resolvePath));
   };
 }
 
