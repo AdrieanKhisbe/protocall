@@ -46,13 +46,9 @@ exports.create = function create(parent) {
       const parentStack = this.parent && this.parent.getStack(protocol);
       const hasParent = parentStack && parentStack.length;
 
-      if (currentStack && hasParent) {
-        return currentStack.concat(parentStack);
-      }
+      if (currentStack && hasParent) return currentStack.concat(parentStack);
 
-      if (hasParent) {
-        return parentStack;
-      }
+      if (hasParent) return parentStack;
 
       return currentStack;
     },
@@ -70,13 +66,10 @@ exports.create = function create(parent) {
       if (!handler) {
         handler = handlers[protocol] = {
           protocol,
-
           regex: new RegExp(`^${protocol}:`),
-
           predicate(value) {
             return this.regex.test(value);
           },
-
           stack: []
         };
       }

@@ -1,5 +1,5 @@
 const fs = require('fs');
-const {dirname, resolve} = require('path'); // TODO: unfold
+const path = require('path');
 const _ = require('lodash/fp');
 const findGlob = require('glob');
 const caller = require('caller');
@@ -9,13 +9,13 @@ const caller = require('caller');
  * @param basedir
  * @returns {Function}
  */
-function path(basedir) {
-  basedir = basedir || dirname(caller());
+function _path(basedir) {
+  const baseDirectory = basedir || path.dirname(caller());
   return function pathHandler(file) {
     // Absolute path already, so just return it.
-    if (resolve(file) === file) return file;
+    if (path.resolve(file) === file) return file;
 
-    return resolve(basedir, ...file.split('/'));
+    return path.resolve(baseDirectory, ...file.split('/'));
   };
 }
 
@@ -31,7 +31,7 @@ function file(basedir, options) {
     basedir = undefined;
   }
 
-  const pathHandler = path(basedir);
+  const pathHandler = _path(basedir);
   options = options || {encoding: null, flag: 'r'};
 
   return function fileHandler(file, cb) {
@@ -93,7 +93,7 @@ function env() {
  * @returns {Function}
  */
 function _require(basedir) {
-  const resolvePath = path(basedir);
+  const resolvePath = _path(basedir);
   return function requireHandler(value) {
     const _module = /^\.{0,2}\//.test(value) ? resolvePath(value) : value;
     // resolve if start with ../ ./ or /
@@ -135,9 +135,9 @@ function glob(options) {
   }
 
   options = options || {};
-  options.cwd = options.cwd || dirname(caller());
+  options.cwd = options.cwd || path.dirname(caller());
 
-  const resolvePath = path(options.cwd);
+  const resolvePath = _path(options.cwd);
   return function globHandler(value, cb) {
     findGlob(value, options, function(err, data) {
       if (err) return cb(err);
@@ -147,4 +147,4 @@ function glob(options) {
   };
 }
 
-module.exports = {path, file, base64, env, require: _require, exec, glob};
+module.exports = {path: _path, file, base64, env, require: _require, exec, glob};
