@@ -13,10 +13,12 @@ const getDefaultResolver = (dirname, parent) => {
   });
 };
 
+const create = (parent, initialHandlers) => new Resolver(parent, initialHandlers);
+
 module.exports = {
   Resolver,
   resolver: Resolver,
-  create: Resolver.create,
+  create,
   handlers,
   getDefaultResolver
 };

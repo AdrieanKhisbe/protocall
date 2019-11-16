@@ -152,4 +152,3 @@ class Resolver {
   }
 }
 module.exports = Resolver;
-module.exports.create = parent => new Resolver(parent);
