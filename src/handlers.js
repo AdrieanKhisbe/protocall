@@ -64,10 +64,10 @@ function env() {
       return parseInt(value, 10);
     },
     b(value) {
-      return value !== '' && value !== 'false' && value !== '0' && value !== undefined;
+      return !['', 'false', '0', undefined].includes(value);
     },
     '!b'(value) {
-      return value === '' || value === 'false' || value === '0' || value === undefined;
+      return ['', 'false', '0', undefined].includes(value);
     }
   };
 
@@ -131,7 +131,7 @@ function exec(basedir) {
 
 /**
  * Creates the protocol handler for the `glob:` protocol
- * @param options https://github.com/isaacs/node-glob#options
+ * @param options https://github.com/mrmlnc/fast-glob#options-1
  * @returns {Function}
  */
 function glob(options) {

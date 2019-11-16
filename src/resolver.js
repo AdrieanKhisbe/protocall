@@ -40,7 +40,7 @@ class Resolver {
   /**
    * Returns the handlers for a given protocol, including parent handlers
    * @param protocol
-   * @returns [Handler[]]
+   * @returns {Function[]}
    */
   getHandlers(protocol) {
     const handlers = this._handlers[protocol] || [];
