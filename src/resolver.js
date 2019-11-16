@@ -95,70 +95,57 @@ class Resolver {
    * @param data The data structure to scan
    * @param callback the callback to invoke when processing is complete with the signature `function (err, data)`
    */
-  resolve(data, filename, callback) {
-    let tasks, handler;
+  _resolve(data, filename) {
+    if (_.isArray(data))
+      return async.parallel(data.map(val => this.resolve.bind(this, val, filename)));
 
-    if (!callback) {
+    if (_.isPlainObject(data))
+      return async.parallel(_.mapValues(value => this.resolve.bind(this, value, filename), data));
+
+    if (_.isString(data)) {
+      const handler = this.getHandler(data);
+      if (!handler) return data;
+
+      // Remove protocol prefix
+      const content = data.slice(handler.protocol.length + 1);
+
+      const tasks = this.getStack(handler.protocol).map(handlerInStack => {
+        if (handlerInStack.length >= 2) return handlerInStack;
+        // If the handler is single argument, expect its return value to be useful,
+        // so we wrap it up in continuation-passing style
+        return async input => handlerInStack(input);
+      });
+
+      const bootsrapTask =
+        tasks[0].length == 2
+          ? function init(done) {
+              done(null, content);
+            }
+          : function init(done) {
+              done(null, content, filename);
+            };
+
+      // Waterfall will *always* resolve asynchronously
+      return async.waterfall([bootsrapTask, ...tasks]);
+    }
+    // Non-protocol-able value
+    return Promise.resolve(data);
+  }
+
+  /**
+   * Resolves all the protocols contained in the provided object.
+   * @param data The data structure to scan
+   * @param callback the callback to invoke when processing is complete with the signature `function (err, data)`
+   */
+  async resolve(data, filename, callback) {
+    if (!callback && _.isFunction(filename)) {
       callback = filename;
       filename = null;
     }
 
-    if (_.isArray(data) || _.isPlainObject(data)) {
-      if (_.isArray(data)) {
-        tasks = data.map(val => this.resolve.bind(this, val, filename));
-      } else {
-        tasks = {};
-        Object.keys(data).forEach(key => {
-          tasks[key] = this.resolve.bind(this, data[key], filename);
-        });
-      }
-
-      async.parallel(tasks, function(err, data) {
-        err ? callback(err) : callback(null, data);
-      });
-    } else if (_.isString(data)) {
-      tasks = [];
-
-      handler = this.getHandler(data);
-      if (!handler) {
-        setImmediate(callback.bind(null, null, data));
-        return;
-      }
-
-      // Remove protocol prefix
-      data = data.slice(handler.protocol.length + 1);
-
-      tasks = this.getStack(handler.protocol).map(function(handler) {
-        if (handler.length < 2) {
-          // If the handler is single argument, expect its return value to be useful,
-          // so we wrap it up in continuation-passing style
-          return function wrapper(input, done) {
-            try {
-              return done(null, handler(input));
-            } catch (err) {
-              return done(err);
-            }
-          };
-        }
-        return handler;
-      });
-
-      tasks.unshift(
-        tasks[0].length == 2
-          ? function init(done) {
-              done(null, data);
-            }
-          : function init(done) {
-              done(null, data, filename);
-            }
-      );
-
-      // Waterfall will *always* resolve asynchronously
-      async.waterfall(tasks, callback);
-    } else {
-      // Non-protocol-able value
-      callback(null, data);
-    }
+    const result = this._resolve(data, filename);
+    if (!callback) return result;
+    return result.then(res => callback(null, res)).catch(callback);
   }
 }
 module.exports = Resolver;
