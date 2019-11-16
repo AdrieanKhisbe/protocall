@@ -41,7 +41,7 @@
   "readmeFilename": "README.md",
   "dependencies": {
     "async": "~2.6.2",
-    "caller": "^1.0.1",
+    "callsites": "^3.1.0",
     "glob": "^7.1.5",
     "lodash": "^4.17.15"
   },

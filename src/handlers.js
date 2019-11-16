@@ -2,7 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const _ = require('lodash/fp');
 const findGlob = require('glob');
-const caller = require('caller');
+const callsites = require('callsites');
+
+const getCallerFolder = () => {
+  const file = callsites()[2].getFileName(); // note: 2 and not 0 since wrapped in function
+  return path.dirname(file);
+};
 
 /**
  * Creates the protocol handler for the `path:` protocol
@@ -10,7 +15,7 @@ const caller = require('caller');
  * @returns {Function}
  */
 function _path(basedir) {
-  const baseDirectory = basedir || path.dirname(caller());
+  const baseDirectory = basedir || getCallerFolder();
   return function pathHandler(file) {
     // Absolute path already, so just return it.
     if (path.resolve(file) === file) return file;
@@ -135,7 +140,7 @@ function glob(options) {
   }
 
   options = options || {};
-  options.cwd = options.cwd || path.dirname(caller());
+  options.cwd = options.cwd || getCallerFolder();
 
   const resolvePath = _path(options.cwd);
   return function globHandler(value, cb) {
