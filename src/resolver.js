@@ -69,6 +69,13 @@ class Resolver {
    * @returns {Function} invoke to remove the registered handler from the stack
    */
   use(protocol, implementation) {
+    if (_.isPlainObject(protocol)) {
+      return _.pipe(
+        _.toPairs,
+        _.map(([key, implem]) => [key, this.use(key, implem)]),
+        _.fromPairs
+      )(protocol);
+    }
     const handlers = this._handlers;
     let handler = handlers[protocol];
 
