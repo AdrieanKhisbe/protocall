@@ -1,5 +1,14 @@
+const fs = require('fs');
+const path = require('path');
 const _ = require('lodash/fp');
 const async = require('async');
+
+function isModule(file) {
+  // require.resolve will locate a file without a known extension (e.g. txt)
+  // and try to load it as javascript. That won't work for this case.
+  const ext = path.extname(file);
+  return ext === '' || require.extensions[ext];
+}
 
 class Resolver {
   constructor(parent) {
@@ -107,7 +116,7 @@ class Resolver {
       return Promise.resolve(data);
 
     const handler = this.getHandler(data);
-    if (!handler) return data;
+    if (!handler) return Promise.resolve(data);
 
     // Remove protocol prefix
     const content = data.slice(handler.protocol.length + 1);
@@ -131,13 +140,33 @@ class Resolver {
    * @param data The data structure to scan
    * @param callback the callback to invoke when processing is complete with the signature `function (err, data)`
    */
-  async resolve(data, filename, callback) {
+  resolve(data, filename, callback) {
     if (!callback && _.isFunction(filename)) {
       callback = filename;
       filename = null;
     }
 
     const result = this._resolve(data, filename);
+    if (!callback) return result;
+    return result.then(res => callback(null, res)).catch(callback);
+  }
+
+  resolveFile(file, callback) {
+    if (isModule(file))
+      // eslint-disable-next-line import/no-dynamic-require
+      return this.resolve(require(file), file, callback);
+
+    const result = new Promise((resolve, reject) =>
+      fs.readFile(file, 'utf8', (err, data) => {
+        if (err) return reject(err);
+        try {
+          return resolve(JSON.parse(data));
+        } catch (parsingError) {
+          reject(parsingError);
+        }
+      })
+    ).then(fileContent => this.resolve(fileContent, file));
+
     if (!callback) return result;
     return result.then(res => callback(null, res)).catch(callback);
   }
