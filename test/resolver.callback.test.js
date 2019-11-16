@@ -24,7 +24,7 @@ test('use', t => {
   resolver.use('foo', foo);
 
   t.is(typeof resolver._handlers['foo'], 'object');
-  t.is(resolver._handlers['foo'].stack.length, 1);
+  t.is(resolver._handlers['foo'].length, 1);
 });
 
 test('unuse', t => {
@@ -53,27 +53,27 @@ test('unuse', t => {
   t.is(typeof resolver._handlers['handlerB'], 'object');
   t.is(typeof resolver._handlers['handlerC'], 'object');
 
-  t.is(resolver._handlers['handlerA'].stack.length, 1);
-  t.is(resolver._handlers['handlerB'].stack.length, 1);
-  t.is(resolver._handlers['handlerC'].stack.length, 1);
+  t.is(resolver._handlers['handlerA'].length, 1);
+  t.is(resolver._handlers['handlerB'].length, 1);
+  t.is(resolver._handlers['handlerC'].length, 1);
 
   unuseA();
 
-  t.is(resolver._handlers['handlerA'].stack.length, 0);
-  t.is(resolver._handlers['handlerB'].stack.length, 1);
-  t.is(resolver._handlers['handlerC'].stack.length, 1);
+  t.is(resolver._handlers['handlerA'].length, 0);
+  t.is(resolver._handlers['handlerB'].length, 1);
+  t.is(resolver._handlers['handlerC'].length, 1);
 
   unuseC();
 
-  t.is(resolver._handlers['handlerA'].stack.length, 0);
-  t.is(resolver._handlers['handlerB'].stack.length, 1);
-  t.is(resolver._handlers['handlerC'].stack.length, 0);
+  t.is(resolver._handlers['handlerA'].length, 0);
+  t.is(resolver._handlers['handlerB'].length, 1);
+  t.is(resolver._handlers['handlerC'].length, 0);
 
   unuseB();
 
-  t.is(resolver._handlers['handlerA'].stack.length, 0);
-  t.is(resolver._handlers['handlerB'].stack.length, 0);
-  t.is(resolver._handlers['handlerC'].stack.length, 0);
+  t.is(resolver._handlers['handlerA'].length, 0);
+  t.is(resolver._handlers['handlerB'].length, 0);
+  t.is(resolver._handlers['handlerC'].length, 0);
 });
 
 test('unuse stack', t => {
@@ -100,24 +100,24 @@ test('unuse stack', t => {
   t.is(typeof unuseC, 'function');
 
   t.is(typeof resolver._handlers[name], 'object');
-  t.is(resolver._handlers[name].stack.length, 3);
+  t.is(resolver._handlers[name].length, 3);
 
   const removedA = unuseA();
   t.is(removedA, customA);
   t.is(`${name}A`, customA.name);
-  t.is(resolver._handlers[name].stack.length, 2);
+  t.is(resolver._handlers[name].length, 2);
 
   t.is(unuseA(), undefined);
 
   const removedB = unuseB();
   t.is(removedB, customB);
   t.is(`${name}B`, customB.name);
-  t.is(resolver._handlers[name].stack.length, 1);
+  t.is(resolver._handlers[name].length, 1);
 
   const removedC = unuseC();
   t.is(removedC, customC);
   t.is(`${name}C`, customC.name);
-  t.is(resolver._handlers[name].stack.length, 0);
+  t.is(resolver._handlers[name].length, 0);
 });
 
 test.cb('resolve', t => {

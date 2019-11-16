@@ -10,6 +10,19 @@ function isModule(file) {
   return ext === '' || require.extensions[ext];
 }
 
+class Handler {
+  constructor(protocol, implementation) {
+    this.protocol = protocol;
+    this.implementation = implementation;
+  }
+  get regex() {
+    return new RegExp(`^${this.protocol}:`);
+  }
+  predicate(value) {
+    return this.regex.test(value);
+  }
+}
+
 class Resolver {
   constructor(parent) {
     this.parent = parent;
@@ -21,45 +34,24 @@ class Resolver {
    * @param value the value to match
    * @returns {Object} the handler, if found, otherwise undefined.
    */
-  getHandler(value) {
-    let resolver = this;
-    let handler = undefined;
+  getProtocol(value) {
+    return _.find(protocol => _.startsWith(`${protocol}:`, value), this.supportedProtocols);
+  }
 
-    while (!handler && resolver && resolver._handlers) {
-      Object.keys(resolver._handlers).some(function(protocol) {
-        const current = resolver._handlers[protocol];
-
-        // Test the value to see if this is the appropriate handler.
-        if (current.predicate(value)) {
-          handler = current;
-          return true;
-        }
-
-        return false;
-      });
-
-      // Move to the parent
-      resolver = resolver.parent;
-    }
-
-    return handler;
+  get supportedProtocols() {
+    const resolverProtocols = _.keys(this._handlers);
+    return _.uniq(resolverProtocols.concat(this.parent ? this.parent.supportedProtocols : []));
   }
 
   /**
-   * Returns the handler stack for a given protocol, including parent handlers
+   * Returns the handlers for a given protocol, including parent handlers
    * @param protocol
-   * @returns []
+   * @returns [Handler[]]
    */
-  getStack(protocol) {
-    const currentStack = this._handlers[protocol] && this._handlers[protocol].stack;
-    const parentStack = this.parent && this.parent.getStack(protocol);
-    const hasParent = parentStack && parentStack.length;
-
-    if (currentStack && hasParent) return currentStack.concat(parentStack);
-
-    if (hasParent) return parentStack;
-
-    return currentStack;
+  getHandlers(protocol) {
+    const handlers = this._handlers[protocol] || [];
+    const parentHandlers = this.parent && this.parent.getHandlers(protocol);
+    return _.concat(parentHandlers || [], handlers || []);
   }
 
   /**
@@ -76,26 +68,19 @@ class Resolver {
         _.fromPairs
       )(protocol);
     }
-    if (!_.has(protocol, this._handlers)) {
-      this._handlers[protocol] = {
-        protocol,
-        regex: new RegExp(`^${protocol}:`),
-        predicate(value) {
-          return this.regex.test(value);
-        },
-        stack: []
-      };
-    }
+    if (!_.has(protocol, this._handlers)) this._handlers[protocol] = [];
 
-    const handler = this._handlers[protocol];
-    handler.stack.push(implementation);
+    const handler = new Handler(protocol, implementation);
+    this._handlers[protocol].push(handler);
+
     let removed = false;
+    const protocolHandlers = this._handlers[protocol];
 
     return function unuse() {
       if (!removed) {
         removed = true;
-        const index = handler.stack.indexOf(implementation);
-        return handler.stack.splice(index, 1)[0];
+        const index = protocolHandlers.indexOf(handler);
+        return protocolHandlers.splice(index, 1)[0].implementation;
       }
       return undefined;
     };
@@ -117,17 +102,16 @@ class Resolver {
       // Non-protocol-able value
       return Promise.resolve(data);
 
-    const handler = this.getHandler(data);
-    if (!handler) return Promise.resolve(data);
+    const protocol = this.getProtocol(data);
+    if (!protocol) return Promise.resolve(data);
 
     // Remove protocol prefix
-    const content = data.slice(handler.protocol.length + 1);
-
-    const tasks = this.getStack(handler.protocol).map(handlerInStack => {
-      if (handlerInStack.length >= 2) return handlerInStack;
+    const content = data.slice(protocol.length + 1);
+    const tasks = this.getHandlers(protocol).map(handlerInStack => {
+      if (handlerInStack.implementation.length >= 2) return handlerInStack.implementation;
       // If the handler is single argument, expect its return value to be useful,
       // so we wrap it up in continuation-passing style
-      return async input => handlerInStack(input);
+      return async input => handlerInStack.implementation(input); //.then(a=>console.log(a)||a);
     });
 
     const bootsrapTask =
