@@ -10,19 +10,6 @@ function isModule(file) {
   return ext === '' || require.extensions[ext];
 }
 
-class Handler {
-  constructor(protocol, implementation) {
-    this.protocol = protocol;
-    this.implementation = implementation;
-  }
-  get regex() {
-    return new RegExp(`^${this.protocol}:`);
-  }
-  predicate(value) {
-    return this.regex.test(value);
-  }
-}
-
 class Resolver {
   constructor(parent) {
     this.parent = parent;
@@ -57,10 +44,10 @@ class Resolver {
   /**
    * Register a given handler for the provided protocol.
    * @param protocol the protocol for which the handler should be registered.
-   * @param implementation the handler function with the signature `function (input, [fn])`
+   * @param handler the handler function with the signature `function (input, [fn])`
    * @returns {Function} invoke to remove the registered handler from the stack
    */
-  use(protocol, implementation) {
+  use(protocol, handler) {
     if (_.isPlainObject(protocol)) {
       return _.pipe(
         _.toPairs,
@@ -70,7 +57,6 @@ class Resolver {
     }
     if (!_.has(protocol, this._handlers)) this._handlers[protocol] = [];
 
-    const handler = new Handler(protocol, implementation);
     this._handlers[protocol].push(handler);
 
     let removed = false;
@@ -80,7 +66,8 @@ class Resolver {
       if (!removed) {
         removed = true;
         const index = protocolHandlers.indexOf(handler);
-        return protocolHandlers.splice(index, 1)[0].implementation;
+        protocolHandlers.splice(index, 1);
+        return handler;
       }
       return undefined;
     };
@@ -108,10 +95,10 @@ class Resolver {
     // Remove protocol prefix
     const content = data.slice(protocol.length + 1);
     const tasks = this.getHandlers(protocol).map(handlerInStack => {
-      if (handlerInStack.implementation.length >= 2) return handlerInStack.implementation;
+      if (handlerInStack.length >= 2) return handlerInStack;
       // If the handler is single argument, expect its return value to be useful,
       // so we wrap it up in continuation-passing style
-      return async input => handlerInStack.implementation(input); //.then(a=>console.log(a)||a);
+      return async input => handlerInStack(input);
     });
 
     const bootsrapTask =
