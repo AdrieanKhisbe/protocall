@@ -11,9 +11,16 @@ function isModule(file) {
 }
 
 class Resolver {
-  constructor(parent) {
+  constructor(parent, handlers) {
+    if (!(parent instanceof Resolver) && !handlers) {
+      handlers = parent;
+      parent = null;
+    }
     this.parent = parent;
-    this._handlers = {}; // TODO: latern intial resolvers
+    this._handlers = {};
+    if (handlers) {
+      this.use(handlers);
+    }
   }
 
   /**
