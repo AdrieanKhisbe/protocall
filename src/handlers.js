@@ -68,11 +68,17 @@ function env() {
     },
     '!b'(value) {
       return ['', 'false', '0', undefined].includes(value);
+    },
+    r(value) {
+      if (!value.startsWith('/')) return new RegExp(value);
+
+      const [, pattern, flags] = value.match(/^\/(.*)\/([miguys]+)?$/);
+      return new RegExp(pattern, flags);
     }
   };
 
   return function envHandler(value) {
-    const match = value.match(/^([\w_]+)(?::-(.*?))?(?:[|](.*))?$/);
+    const match = value.match(/^([\w_]+)(?::-(.+?))?(?:[|](.+))?$/);
     if (!match) throw new Error(`Invalid env protocol provided: '${value}'`);
     const [, envVariableName, defaultValue, filter] = match;
     // TODO: later, could add multiple filters

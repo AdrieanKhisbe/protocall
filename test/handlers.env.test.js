@@ -14,6 +14,13 @@ test('env raw', t => {
   t.is(envHandler('TEST_SAMPLE'), '8000');
 });
 
+test('env with invalid value', t => {
+  t.throws(() => envHandler('TEST_SAMPLE:-'), /Invalid env protocol provided/);
+  t.throws(() => envHandler('TEST_SAMPLE|'), /Invalid env protocol provided/);
+  t.throws(() => envHandler('TEST-SAMPLE'), /Invalid env protocol provided/);
+  t.throws(() => envHandler('TEST_SAMPLE:-'), /Invalid env protocol provided/);
+});
+
 test('env as number', t => {
   process.env.TEST_SAMPLE_NUMBER = '8000';
   t.is(envHandler('TEST_SAMPLE_NUMBER|d'), 8000);
@@ -77,7 +84,17 @@ test('env as boolean negation from empty', t => {
   t.is(envHandler('TEST_SAMPLE_TO_NOT_BOOL_FROM_UNDEFINED_VARENV|!b'), true);
 });
 
-test('env with default', t => {
+test('env as simple regex', t => {
+  process.env.TEST_SAMPLE_SIMPLE_REGEX = '.*';
+  t.deepEqual(envHandler('TEST_SAMPLE_SIMPLE_REGEX|r'), /.*/);
+});
+
+test('env as complex regex', t => {
+  process.env.TEST_SAMPLE_SIMPLE_REGEX = '/.*/g';
+  t.deepEqual(envHandler('TEST_SAMPLE_SIMPLE_REGEX|r'), /.*/g);
+});
+
+test('env as regex with flags', t => {
   process.env.TEST_SAMPLE_STRING_DEFAULT = 'something defined';
   t.is(envHandler('TEST_SAMPLE_STRING_DEFAULT:-some default'), 'something defined');
   t.is(envHandler('TEST_SAMPLE_DEFAULT_FROM_UNDEFINED_VARENV:-some default'), 'some default');
