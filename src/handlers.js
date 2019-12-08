@@ -72,23 +72,13 @@ function env() {
   };
 
   return function envHandler(value) {
-    let result;
+    const [envVariableName, filter] = value.split('|'); // FIXME: later, could add multiple filters
 
-    Object.keys(filters).some(function(key) {
-      const fn = filters[key];
-      const pattern = `|${key}`;
-      const loc = value.indexOf(pattern);
+    const rawValue = process.env[envVariableName];
+    if (!filter) return rawValue;
 
-      if (loc > -1 && loc === value.length - pattern.length) {
-        value = value.slice(0, -pattern.length);
-        result = fn(process.env[value]);
-        return true;
-      }
-
-      return false;
-    });
-
-    return result === undefined ? process.env[value] : result;
+    const filterHandler = filters[filter.trim()];
+    return filterHandler(rawValue);
   };
 }
 
