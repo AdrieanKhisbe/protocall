@@ -28,7 +28,9 @@
   ],
   "keywords": [
     "config",
-    "configuration"
+    "configuration",
+    "shortstop",
+    "protocol"
   ],
   "author": "Erik Toth <ertoth@paypal.com>",
   "contributors": [
