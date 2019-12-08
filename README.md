@@ -66,6 +66,7 @@ All these are loaded by the `getDefaultResolver`
 - [require](#require)
 - [exec](#exec)
 - [glob](#glob)
+- [regexp](#regexp)
 
 
 ### path
@@ -155,6 +156,18 @@ Creates a handler which match files using the patterns the shell uses.
 ```json
 {
     "files": "glob:**/*.js"
+}
+```
+
+### regexp
+`protocall.handlers.regexp()`
+
+Creates a handler which will convert string to associated regular expression.
+
+```json
+{
+    "anything": "regexp:.*",
+    "anythingWithFlag": "regexp:/.*/gm",
 }
 ```
 

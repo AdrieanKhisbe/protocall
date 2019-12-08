@@ -9,7 +9,8 @@ const getDefaultResolver = (dirname, parent) => {
     base64: handlers.base64(),
     env: handlers.env(),
     require: handlers.require(folder),
-    exec: handlers.exec(folder)
+    exec: handlers.exec(folder),
+    regexp: handlers.regexp()
   });
 };
 

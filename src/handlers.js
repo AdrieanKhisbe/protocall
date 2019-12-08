@@ -54,6 +54,18 @@ function base64() {
   };
 }
 
+function regexpHandler(value) {
+  const match = value.match(/^\/(.*)\/([miguys]+)?$/);
+  if (!match) return new RegExp(value);
+
+  const [, pattern, flags] = match;
+  return new RegExp(pattern, flags);
+}
+
+function regexp() {
+  return regexpHandler;
+}
+
 /**
  * Creates the protocol handler for the `env:` protocol
  * @returns {Function}
@@ -70,10 +82,7 @@ function env() {
       return ['', 'false', '0', undefined].includes(value);
     },
     r(value) {
-      if (!value.startsWith('/')) return new RegExp(value);
-
-      const [, pattern, flags] = value.match(/^\/(.*)\/([miguys]+)?$/);
-      return new RegExp(pattern, flags);
+      return regexpHandler(value);
     }
   };
 
@@ -147,4 +156,4 @@ function glob(options) {
   };
 }
 
-module.exports = {path: _path, file, base64, env, require: _require, exec, glob};
+module.exports = {path: _path, file, base64, regexp, env, require: _require, exec, glob};
