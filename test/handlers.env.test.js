@@ -76,3 +76,13 @@ test('env as boolean negation (false number)', t => {
 test('env as boolean negation from empty', t => {
   t.is(envHandler('TEST_SAMPLE_TO_NOT_BOOL_FROM_UNDEFINED_VARENV|!b'), true);
 });
+
+test('env with default', t => {
+  process.env.TEST_SAMPLE_STRING_DEFAULT = 'something defined';
+  t.is(envHandler('TEST_SAMPLE_STRING_DEFAULT:-some default'), 'something defined');
+  t.is(envHandler('TEST_SAMPLE_DEFAULT_FROM_UNDEFINED_VARENV:-some default'), 'some default');
+});
+
+test('env with default and filter', t => {
+  t.is(envHandler('TEST_SAMPLE_DEFAULT_TO_BOOL_FROM_UNDEFINED_VARENV:-true|b'), true);
+});

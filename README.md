@@ -94,6 +94,8 @@ Creates a handler which will return a buffer containing the content of the base6
 
 Creates a handler which will resolve the provided value as an environment variable, optionally casting the value using the provided filter. Supported filters are `|d`, `|b`, and `|!b` which will cast to Number and Boolean types respectively.
 
+You can also specify a default value with a similar syntax than bash, using `:-` to separate the variable name from the default value.
+
 Examples:
 ```json
 {
@@ -101,7 +103,9 @@ Examples:
     "numver": "env:PORT|d",
     "true": "env:ENABLED|b",
     "false": "env:FALSY|b",
-    "notFalse": "env:FALSY|!b"
+    "notFalse": "env:FALSY|!b",
+    "withDefault": "env:SOMETHING:-with default",
+    "withDefaultAndFilter": "env:SOME_NUMBER:-12|d",
 }
 ```
 

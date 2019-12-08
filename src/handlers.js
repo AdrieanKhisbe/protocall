@@ -72,13 +72,16 @@ function env() {
   };
 
   return function envHandler(value) {
-    const [envVariableName, filter] = value.split('|'); // FIXME: later, could add multiple filters
+    const match = value.match(/^([\w_]+)(?::-(.*?))?(?:[|](.*))?$/);
+    if (!match) throw new Error(`Invalid env protocol provided: '${value}'`);
+    const [, envVariableName, defaultValue, filter] = match;
+    // TODO: later, could add multiple filters
 
     const rawValue = process.env[envVariableName];
-    if (!filter) return rawValue;
-
+    const rawValueWithDefault = defaultValue && rawValue === undefined ? defaultValue : rawValue;
+    if (!filter) return rawValueWithDefault;
     const filterHandler = filters[filter.trim()];
-    return filterHandler(rawValue);
+    return filterHandler(rawValueWithDefault);
   };
 }
 
