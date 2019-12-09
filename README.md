@@ -225,7 +225,25 @@ Return a promise that is resolved to the processed data.
 
 Return a promise that is resolved to the processed data.
 
+It is now also possible to provide a specific parser for non JSON files.
+To do so, instead to provide file path, provide an object with a `path` and `parser` property.
+`resolver.resolveFile({path, parser}, [callback]);`
+
 ## Advanced resolver usage
+
+### Loading config from yaml
+
+```js
+const protocall = require('protocall');
+const yaml = require('js-yaml');
+const resolver = protocall.getDefaultResolver();
+resolver.resolveFile({
+    path: './relative/path/to.yaml',
+    parser: yaml.safeLoad
+}).then(config => {
+    // play around with the config
+})
+```
 
 ### Multiple handlers
 Multiple handlers can be registered for a given protocol. They will be executed in the order registered and the output
