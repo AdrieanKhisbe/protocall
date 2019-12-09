@@ -25,8 +25,9 @@ class Resolver {
 
   /**
    * Locates a handler for the provided value, searching the parent, if necessary
+   * @protected
    * @param value the value to match
-   * @returns {Object} the handler, if found, otherwise undefined.
+   * @returns {String} the handler, if found, otherwise undefined.
    */
   getProtocol(value) {
     return _.find(protocol => _.startsWith(`${protocol}:`, value), this.supportedProtocols);
@@ -39,6 +40,7 @@ class Resolver {
 
   /**
    * Returns the handlers for a given protocol, including parent handlers
+   * @protected
    * @param protocol
    * @returns {Function[]}
    */
@@ -88,7 +90,9 @@ class Resolver {
 
   /**
    * Resolves all the protocols contained in the provided object.
+   * @private
    * @param data The data structure to scan
+   * @param filename Optional path of configuration to resolve
    * @param callback the callback to invoke when processing is complete with the signature `function (err, data)`
    */
   _resolve(data, filename) {
@@ -123,7 +127,9 @@ class Resolver {
 
   /**
    * Resolves all the protocols contained in the provided object.
+   * @public
    * @param data The data structure to scan
+   * @param filename Optional path of configuration to resolve
    * @param callback the callback to invoke when processing is complete with the signature `function (err, data)`
    */
   resolve(data, filename, callback) {
@@ -137,8 +143,14 @@ class Resolver {
     return result.then(res => callback(null, res)).catch(callback);
   }
 
-  resolveFile(file, callback) {
-    const {path, parser} = _.isString(file) ? {path: file, parser: JSON.parse} : file;
+  /**
+   * Load file and resolve its content
+   * @public
+   * @param filename Path of configuration to resolve
+   * @param callback the callback to invoke when processing is complete with the signature `function (err, data)`
+   */
+  resolveFile(filename, callback) {
+    const {path, parser} = _.isString(filename) ? {path: filename, parser: JSON.parse} : filename;
 
     if (isModule(path))
       // eslint-disable-next-line import/no-dynamic-require
@@ -153,10 +165,10 @@ class Resolver {
           reject(parsingError);
         }
       })
-    ).then(fileContent => this.resolve(fileContent, file));
+    ).then(fileContent => this.resolve(fileContent, filename));
 
     if (!callback) return result;
-    return result.then(res => callback(null, res)).catch(callback);
+    result.then(res => callback(null, res)).catch(callback);
   }
 }
 module.exports = Resolver;
