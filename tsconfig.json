@@ -1,0 +1,9 @@
+{
+    "name": "protocall",
+    "includes": ["index.js", "src/**/*.js"],
+    "compilerOptions": {
+      "module": "commonjs",
+      "esModuleInterop": true,
+      "moduleResolution": "node"
+    }
+}

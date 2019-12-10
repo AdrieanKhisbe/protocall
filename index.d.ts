@@ -1,7 +1,3 @@
-import protocall = require('.');
-
-declare module 'protocall';
-
 interface Handlers {
   [protocolName: string]: Handler
 }
@@ -17,25 +13,36 @@ interface FileWithParser {
   parser: (content: string) => Object;
 }
 
-declare class Resolver {
-  constructor(parent?: Resolver, handlers?: Handlers);
-  constructor(handlers: Handlers);
+declare namespace protocall {
+  export class Resolver {
+    constructor(parent?: Resolver, handlers?: Handlers);
+    constructor(handlers: Handlers);
 
-  supportedProtocols: string[];
+    supportedProtocols: string[];
 
-  protected getProtocol(value: string): string;
-  protected getHandlers(protocol: string): Handler[];
+    protected getProtocol(value: string): string;
+    protected getHandlers(protocol: string): Handler[];
 
-  public use(protocols: Handlers) : Record<string, UnuseHandler>;
-  public use(protocol: string, handler: Handler) : UnuseHandler;
+    public use(protocols: Handlers) : Record<string, UnuseHandler>;
+    public use(protocol: string, handler: Handler) : UnuseHandler;
 
-  private _resolve(data: Object, filename?: string ): Promise<Object>;
-  public resolve(data: Object, filename?: string ): Promise<Object>;
-  public resolve(data: Object, callback: (err: Error | null, result: Object) => void): void;
-  public resolve(data: Object, filename: string, callback: (err: Error | null, result: Object) => void): void;
+    private _resolve(data: Object, filename?: string ): Promise<Object>;
+    public resolve(data: Object, filename?: string ): Promise<Object>;
+    public resolve(data: Object, callback: (err: Error | null, result: Object) => void): void;
+    public resolve(data: Object, filename: string, callback: (err: Error | null, result: Object) => void): void;
 
-  public resolveFile(filename: string): Promise<Object>;
-  public resolveFile(file: FileWithParser): Promise<Object>;
-  public resolveFile(filename: string, callback: (err: Error | null, result: Object) => void): Promise<Object>;
-  public resolveFile(file: FileWithParser, callback: (err: Error | null, result: Object) => void): Promise<Object>;
+    public resolveFile(filename: string): Promise<Object>;
+    public resolveFile(file: FileWithParser): Promise<Object>;
+    public resolveFile(filename: string, callback: (err: Error | null, result: Object) => void): Promise<Object>;
+    public resolveFile(file: FileWithParser, callback: (err: Error | null, result: Object) => void): Promise<Object>;
+  }
+  export const resolver: Resolver;
+
+  export function create(parent?: Resolver, initialHandlers?: Handlers): Resolver;
+  export function create(initialHandlers: Handlers): Resolver;
+  export const handlers: any; // TODO: add explicit list of handlers? 
+  export function getDefaultResolver(dirname?: string, parent?: Resolver): Resolver;
 }
+
+//declare module 'protocall' {
+export = protocall;

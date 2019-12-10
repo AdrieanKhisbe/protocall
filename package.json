@@ -10,7 +10,8 @@
   "scripts": {
     "test:unit": "ava",
     "lint": "eslint .",
-    "test": "npm run lint && nyc npm run test:unit",
+    "check-dts": "tsd",
+    "test": "npm run lint && npm run check-dts && nyc npm run test:unit",
     "publish-coverage": "nyc report --reporter=lcov > coverage.lcov && codecov",
     "release": "np"
   },
@@ -23,6 +24,7 @@
   },
   "files": [
     "index.js",
+    "index.d.ts",
     "src",
     "package.json"
   ],
@@ -54,7 +56,8 @@
     "eslint": "^6.6.0",
     "js-yaml": "^3.13.1",
     "np": "^5.1.2",
-    "nyc": "^14.1.1"
+    "nyc": "^14.1.1",
+    "tsd": "^0.11.0"
   },
   "ava": {
     "files": [
