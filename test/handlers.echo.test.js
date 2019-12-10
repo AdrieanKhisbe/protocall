@@ -66,3 +66,37 @@ test('echo as simple regex', t => {
 test('echo as complex regex', t => {
   t.deepEqual(echoHandler('/.*/g|r'), /.*/g);
 });
+
+test('echo pipe to from hex', t => {
+  t.deepEqual(echoHandler('636f75636f75757575|from:hex'), 'coucouuuu');
+});
+
+test('echo pipe to from bad config', t => {
+  t.throws(() => echoHandler('coucou|from'), /Missing configuration for the from filter/);
+  t.throws(
+    () => echoHandler('coucou|from:something-unknown'),
+    /Unkown format specifed for from filter: 'something-unknown'/
+  );
+});
+
+test('echo pipe to from base64', t => {
+  t.deepEqual(echoHandler('YmlnIHNlY3JldA==|from:b64'), 'big secret');
+  t.deepEqual(echoHandler('YmlnIHNlY3JldA==|from:base64'), 'big secret');
+});
+
+test('echo pipe to to hex', t => {
+  t.deepEqual(echoHandler('coucouuuu|to:hex'), '636f75636f75757575');
+});
+
+test('echo pipe t to base64', t => {
+  t.deepEqual(echoHandler('big secret|to:b64'), 'YmlnIHNlY3JldA==');
+  t.deepEqual(echoHandler('big secret|to:base64'), 'YmlnIHNlY3JldA==');
+});
+
+test('echo pipe to to bad config', t => {
+  t.throws(() => echoHandler('coucou|to'), /Missing configuration for the to filter/);
+  t.throws(
+    () => echoHandler('coucou|to:something-unknown'),
+    /Unkown format specifed for to filter: 'something-unknown'/
+  );
+});

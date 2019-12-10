@@ -80,6 +80,18 @@ const filters = {
   },
   r(value, params) {
     return toRegexp(value, params);
+  },
+  from(value, params) {
+    if (!params) throw new Error('Missing configuration for the from filter');
+    if (['b64', 'base64'].includes(params)) return Buffer.from(value, 'base64').toString('utf-8');
+    if (params === 'hex') return Buffer.from(value, 'hex').toString('utf-8');
+    throw new Error(`Unkown format specifed for from filter: '${params}'`);
+  },
+  to(value, params) {
+    if (!params) throw new Error('Missing configuration for the to filter');
+    if (['b64', 'base64'].includes(params)) return Buffer.from(value).toString('base64');
+    if (params === 'hex') return Buffer.from(value).toString('hex');
+    throw new Error(`Unkown format specifed for to filter: '${params}'`);
   }
 };
 
