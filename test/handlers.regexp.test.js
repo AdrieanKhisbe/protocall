@@ -19,3 +19,9 @@ test('regex complex one with delimiter and flags', t => {
   t.deepEqual(regexpHandler('/.*/'), /.*/);
   t.deepEqual(regexpHandler('/.*/gi'), /.*/gi);
 });
+
+test('regex handler with default flags', t => {
+  const regexpHandler = handlers.regexp('m');
+  t.deepEqual(regexpHandler('/.*/'), /.*/m), 'default wasnt apparently applied';
+  t.deepEqual(regexpHandler('/.*/gi'), /.*/gi, 'override did not take over the default');
+});

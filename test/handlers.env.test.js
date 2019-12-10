@@ -91,9 +91,19 @@ test('env as simple regex', t => {
   t.deepEqual(envHandler('TEST_SAMPLE_SIMPLE_REGEX|r'), /.*/);
 });
 
+test('env as simple regex + filter with default flags', t => {
+  process.env.TEST_SAMPLE_SIMPLE_REGEX = '.*';
+  t.deepEqual(envHandler('TEST_SAMPLE_SIMPLE_REGEX|r:im'), /.*/im);
+});
+
 test('env as complex regex', t => {
   process.env.TEST_SAMPLE_SIMPLE_REGEX = '/.*/g';
   t.deepEqual(envHandler('TEST_SAMPLE_SIMPLE_REGEX|r'), /.*/g);
+});
+
+test('env as complex regex + filter with default flags', t => {
+  process.env.TEST_SAMPLE_SIMPLE_REGEX = '/.*/g';
+  t.deepEqual(envHandler('TEST_SAMPLE_SIMPLE_REGEX|r:i'), /.*/g);
 });
 
 test('env as regex with flags', t => {

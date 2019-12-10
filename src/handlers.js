@@ -54,16 +54,18 @@ function base64() {
   };
 }
 
-function regexpHandler(value) {
+function toRegexp(value, params) {
   const match = value.match(/^\/(.*)\/([miguys]+)?$/);
-  if (!match) return new RegExp(value);
+  if (!match) return new RegExp(value, params);
 
   const [, pattern, flags] = match;
-  return new RegExp(pattern, flags);
+  return new RegExp(pattern, flags || params);
 }
 
-function regexp() {
-  return regexpHandler;
+function regexp(defaultFlags) {
+  return function regexpHandler(value) {
+    return toRegexp(value, defaultFlags);
+  };
 }
 
 const filters = {
@@ -76,8 +78,8 @@ const filters = {
   '!b'(value) {
     return ['', 'false', '0', undefined].includes(value);
   },
-  r(value) {
-    return regexpHandler(value);
+  r(value, params) {
+    return toRegexp(value, params);
   }
 };
 
@@ -95,10 +97,12 @@ function env() {
     const rawValue = process.env[envVariableName];
     const rawValueWithDefault = defaultValue && rawValue === undefined ? defaultValue : rawValue;
     if (!filter) return rawValueWithDefault;
-    const filterHandler = filters[filter.trim()];
+
+    const [filterName, filterParam] = filter.trim().split(':');
+    const filterHandler = filters[filterName];
     if (!filterHandler)
-      throw new Error(`Invalid env protocol provided, unknown filter: '${filter}'`);
-    return filterHandler(rawValueWithDefault);
+      throw new Error(`Invalid env protocol provided, unknown filter: '${value}'`);
+    return filterHandler(rawValueWithDefault, filterParam);
   };
 }
 
@@ -115,10 +119,12 @@ function echo() {
       throw new Error(`Invalid echo protocol provided: '${value}'`);
     // TODO: later, could add multiple filters
     if (!filter) return echoString;
-    const filterHandler = filters[filter.trim()];
+
+    const [filterName, filterParam] = filter.trim().split(':');
+    const filterHandler = filters[filterName];
     if (!filterHandler)
-      throw new Error(`Invalid echo protocol provided, unknown filter: '${filter}'`);
-    return filterHandler(echoString);
+      throw new Error(`Invalid echo protocol provided, unknown filter: '${value}'`);
+    return filterHandler(echoString, filterParam);
   };
 }
 
