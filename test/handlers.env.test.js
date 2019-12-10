@@ -148,10 +148,18 @@ test('env pipe to to hex, b64 or digest algorithmes', t => {
 
 test('env configuration with custom filters', t => {
   process.env.coucou = 'coucou';
+  t.is(handlers.env()('coucou|b'), true);
   t.is(handlers.env({})('coucou|b'), true);
-  t.is(handlers.env({}, true)('coucou|b'), true);
-  t.is(handlers.env({}, 'merge')('coucou|b'), true);
-  t.throws(() => handlers.env({}, false)('coucou|b'), /Invalid env protocol provided/);
-  t.throws(() => handlers.env({}, 'replace')('coucou|b'), /Invalid env protocol provided/);
-  t.throws(() => handlers.env({}, 'whataver')('coucou|b'), /Invalid env protocol provided/);
+  t.is(handlers.env({filters: {}})('coucou|b'), true);
+  t.is(handlers.env({filters: {}, merge: true})('coucou|b'), true);
+  t.is(handlers.env({filters: {}, replace: false})('coucou|b'), true);
+  t.is(handlers.env({filters: {}, merge: false, replace: false})('coucou|b'), true);
+  t.throws(
+    () => handlers.env({filters: {}, merge: false})('coucou|b'),
+    /Invalid env protocol provided/
+  );
+  t.throws(
+    () => handlers.env({filters: {}, replace: true}, 'replace')('coucou|b'),
+    /Invalid env protocol provided/
+  );
 });

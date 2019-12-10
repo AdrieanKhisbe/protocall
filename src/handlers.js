@@ -104,15 +104,22 @@ const DEFAULT_FILTERS = {
   }
 };
 
+const shouldMerge = ({merge, replace}) => {
+  if (merge) return true;
+  if (replace) return false;
+  if (merge === false && replace === undefined) return false;
+  return true;
+};
+
 /**
  * Creates the protocol handler for the `env:` protocol
  * @returns {Function}
  */
-function env(filterOverrides, merge = true) {
-  const filters = filterOverrides
-    ? ['merge', true].includes(merge)
-      ? Object.assign({}, DEFAULT_FILTERS, filterOverrides)
-      : filterOverrides
+function env(options = {}) {
+  const filters = options.filters
+    ? shouldMerge(options)
+      ? Object.assign({}, DEFAULT_FILTERS, options.filters)
+      : options.filters
     : DEFAULT_FILTERS;
   return function envHandler(value) {
     const match = value.match(/^([\w_]+)(?::-(.+?))?(?:[|](.+))?$/);
@@ -136,11 +143,11 @@ function env(filterOverrides, merge = true) {
  * Creates the protocol handler for the `echo:` protocol
  * @returns {Function}
  */
-function echo(filterOverrides, merge = true) {
-  const filters = filterOverrides
-    ? ['merge', true].includes(merge)
-      ? Object.assign({}, DEFAULT_FILTERS, filterOverrides)
-      : filterOverrides
+function echo(options = {}) {
+  const filters = options.filters
+    ? shouldMerge(options)
+      ? Object.assign({}, DEFAULT_FILTERS, options.filters)
+      : options.filters
     : DEFAULT_FILTERS;
 
   return function echoHandler(value) {

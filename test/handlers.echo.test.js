@@ -130,7 +130,7 @@ test('echo pipe to to bad config', t => {
 });
 
 test('echo with custom filters overrides', t => {
-  const echoHandler = handlers.echo({lol: () => 'lol', r: null, d: undefined});
+  const echoHandler = handlers.echo({filters: {lol: () => 'lol', r: null, d: undefined}});
 
   t.is(echoHandler('whatever you wont listen|lol'), 'lol');
   t.throws(
@@ -146,7 +146,10 @@ test('echo with custom filters overrides', t => {
 });
 
 test('echo with custom filters replacement', t => {
-  const echoHandler = handlers.echo({lol: () => 'lol', r: null, d: undefined}, false);
+  const echoHandler = handlers.echo({
+    filters: {lol: () => 'lol', r: null, d: undefined},
+    replace: true
+  });
 
   t.is(echoHandler('whatever you wont listen|lol'), 'lol');
   t.throws(() => echoHandler('coucou|b'), /Invalid echo protocol provided/);
@@ -155,10 +158,18 @@ test('echo with custom filters replacement', t => {
 });
 
 test('echo configuration with custom filters', t => {
+  t.is(handlers.echo()('coucou|b'), true);
   t.is(handlers.echo({})('coucou|b'), true);
-  t.is(handlers.echo({}, true)('coucou|b'), true);
-  t.is(handlers.echo({}, 'merge')('coucou|b'), true);
-  t.throws(() => handlers.echo({}, false)('coucou|b'), /Invalid echo protocol provided/);
-  t.throws(() => handlers.echo({}, 'replace')('coucou|b'), /Invalid echo protocol provided/);
-  t.throws(() => handlers.echo({}, 'whataver')('coucou|b'), /Invalid echo protocol provided/);
+  t.is(handlers.echo({filters: {}})('coucou|b'), true);
+  t.is(handlers.echo({filters: {}, merge: true})('coucou|b'), true);
+  t.is(handlers.echo({filters: {}, replace: false})('coucou|b'), true);
+  t.is(handlers.echo({filters: {}, merge: false, replace: false})('coucou|b'), true);
+  t.throws(
+    () => handlers.echo({filters: {}, merge: false})('coucou|b'),
+    /Invalid echo protocol provided/
+  );
+  t.throws(
+    () => handlers.echo({filters: {}, replace: true}, 'replace')('coucou|b'),
+    /Invalid echo protocol provided/
+  );
 });
