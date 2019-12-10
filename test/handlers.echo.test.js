@@ -68,7 +68,7 @@ test('echo as complex regex', t => {
 });
 
 test('echo pipe to from hex', t => {
-  t.deepEqual(echoHandler('636f75636f75757575|from:hex'), 'coucouuuu');
+  t.is(echoHandler('636f75636f75757575|from:hex'), 'coucouuuu');
 });
 
 test('echo pipe to from bad config', t => {
@@ -80,28 +80,28 @@ test('echo pipe to from bad config', t => {
 });
 
 test('echo pipe to from base64', t => {
-  t.deepEqual(echoHandler('YmlnIHNlY3JldA==|from:b64'), 'big secret');
-  t.deepEqual(echoHandler('YmlnIHNlY3JldA==|from:base64'), 'big secret');
+  t.is(echoHandler('YmlnIHNlY3JldA==|from:b64'), 'big secret');
+  t.is(echoHandler('YmlnIHNlY3JldA==|from:base64'), 'big secret');
 });
 
 test('echo pipe to to hex', t => {
-  t.deepEqual(echoHandler('coucouuuu|to:hex'), '636f75636f75757575');
+  t.is(echoHandler('coucouuuu|to:hex'), '636f75636f75757575');
 });
 
 test('echo pipe to to base64', t => {
-  t.deepEqual(echoHandler('big secret|to:b64'), 'YmlnIHNlY3JldA==');
-  t.deepEqual(echoHandler('big secret|to:base64'), 'YmlnIHNlY3JldA==');
+  t.is(echoHandler('big secret|to:b64'), 'YmlnIHNlY3JldA==');
+  t.is(echoHandler('big secret|to:base64'), 'YmlnIHNlY3JldA==');
 });
 
 test('echo pipe to to digest algorithmes', t => {
-  t.deepEqual(echoHandler('big secret|to:md5'), '764da679935cda6e5f6552f37ef2cac3');
-  t.deepEqual(echoHandler('big secret|to:md4'), '20c9476c950e98519c2760194767b01e');
-  t.deepEqual(echoHandler('big secret|to:sha1'), '2151580e68418a2234c5615c4d70a92eb5063710');
-  t.deepEqual(
+  t.is(echoHandler('big secret|to:md5'), '764da679935cda6e5f6552f37ef2cac3');
+  t.is(echoHandler('big secret|to:md4'), '20c9476c950e98519c2760194767b01e');
+  t.is(echoHandler('big secret|to:sha1'), '2151580e68418a2234c5615c4d70a92eb5063710');
+  t.is(
     echoHandler('big secret|to:sha256'),
     'd9deadfb84f5aa7284724cb8ba1d23e494246904be3c0e6daca4a1c3b3081972'
   );
-  t.deepEqual(
+  t.is(
     echoHandler('big secret|to:sha512'),
     'f2238763da9ce209342fdd48e426359bd03bc603495564859ece8f92a8702e76fe3c855dcaf103e26f02383e3f9cc17fef16ea9b0544a1240437b27c7c2e83ae'
   );
@@ -113,4 +113,38 @@ test('echo pipe to to bad config', t => {
     () => echoHandler('coucou|to:something-unknown'),
     /Unkown format specifed for to filter: 'something-unknown'/
   );
+});
+
+test('echo with custom filters overrides', t => {
+  const echoHandler = handlers.echo({lol: () => 'lol', r: null, d: undefined});
+
+  t.is(echoHandler('whatever you wont listen|lol'), 'lol');
+  t.throws(
+    () => echoHandler('coucou|r'),
+    /Invalid echo protocol provided/,
+    'Does not seems like r filter was disabled'
+  );
+  t.throws(
+    () => echoHandler('coucou|d'),
+    /Invalid echo protocol provided/,
+    'Does not seems like d filter was disabled'
+  );
+});
+
+test('echo with custom filters replacement', t => {
+  const echoHandler = handlers.echo({lol: () => 'lol', r: null, d: undefined}, false);
+
+  t.is(echoHandler('whatever you wont listen|lol'), 'lol');
+  t.throws(() => echoHandler('coucou|b'), /Invalid echo protocol provided/);
+  t.throws(() => echoHandler('coucou|r'), /Invalid echo protocol provided/);
+  t.throws(() => echoHandler('coucou|d'), /Invalid echo protocol provided/);
+});
+
+test('echo configuration with custom filters', t => {
+  t.is(handlers.echo({})('coucou|b'), true);
+  t.is(handlers.echo({}, true)('coucou|b'), true);
+  t.is(handlers.echo({}, 'merge')('coucou|b'), true);
+  t.throws(() => handlers.echo({}, false)('coucou|b'), /Invalid echo protocol provided/);
+  t.throws(() => handlers.echo({}, 'replace')('coucou|b'), /Invalid echo protocol provided/);
+  t.throws(() => handlers.echo({}, 'whataver')('coucou|b'), /Invalid echo protocol provided/);
 });

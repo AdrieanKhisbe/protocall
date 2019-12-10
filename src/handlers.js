@@ -71,7 +71,7 @@ function regexp(defaultFlags) {
 
 const DIGEST_ALGORITHMS = ['md5', 'md4', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512'];
 
-const filters = {
+const DEFAULT_FILTERS = {
   d(value) {
     return parseInt(value, 10);
   },
@@ -108,7 +108,12 @@ const filters = {
  * Creates the protocol handler for the `env:` protocol
  * @returns {Function}
  */
-function env() {
+function env(filterOverrides, merge = true) {
+  const filters = filterOverrides
+    ? ['merge', true].includes(merge)
+      ? Object.assign({}, DEFAULT_FILTERS, filterOverrides)
+      : filterOverrides
+    : DEFAULT_FILTERS;
   return function envHandler(value) {
     const match = value.match(/^([\w_]+)(?::-(.+?))?(?:[|](.+))?$/);
     if (!match) throw new Error(`Invalid env protocol provided: '${value}'`);
@@ -131,7 +136,13 @@ function env() {
  * Creates the protocol handler for the `echo:` protocol
  * @returns {Function}
  */
-function echo() {
+function echo(filterOverrides, merge = true) {
+  const filters = filterOverrides
+    ? ['merge', true].includes(merge)
+      ? Object.assign({}, DEFAULT_FILTERS, filterOverrides)
+      : filterOverrides
+    : DEFAULT_FILTERS;
+
   return function echoHandler(value) {
     const match = value.match(/^(.*?)(?:[|](.+))?$/);
     if (!match) throw new Error(`Invalid echo protocol provided: '${value}'`);
