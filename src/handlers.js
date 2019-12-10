@@ -160,9 +160,7 @@ function echo(options = {}) {
     : DEFAULT_FILTERS;
 
   return function echoHandler(value) {
-    const match = value.match(/^(.*?)(?:[|](.+))?$/);
-    if (!match) throw new Error(`Invalid echo protocol provided: '${value}'`);
-    const [, echoString, filter] = match;
+    const [, echoString, filter] = value.match(/^(.*?)(?:[|](.+))?$/);
     if (!echoString || echoString.endsWith('|'))
       throw new Error(`Invalid echo protocol provided: '${value}'`);
     // TODO: later, could add multiple filters
