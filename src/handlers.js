@@ -121,21 +121,30 @@ function env(options = {}) {
       ? Object.assign({}, DEFAULT_FILTERS, options.filters)
       : options.filters
     : DEFAULT_FILTERS;
+
+  const env = options.env ? options.env : process.env;
+
+  const getValue = (key, defaultOverride) => {
+    const rawValue = env[key];
+    if (rawValue !== undefined) return rawValue;
+    if (defaultOverride) return defaultOverride;
+    if (options.defaults) return options.defaults[key];
+  };
+
   return function envHandler(value) {
     const match = value.match(/^([\w_]+)(?::-(.+?))?(?:[|](.+))?$/);
     if (!match) throw new Error(`Invalid env protocol provided: '${value}'`);
     const [, envVariableName, defaultValue, filter] = match;
     // TODO: later, could add multiple filters
 
-    const rawValue = process.env[envVariableName];
-    const rawValueWithDefault = defaultValue && rawValue === undefined ? defaultValue : rawValue;
-    if (!filter) return rawValueWithDefault;
+    const resolvedValue = getValue(envVariableName, defaultValue);
+    if (!filter) return resolvedValue;
 
     const [filterName, ...filterParams] = filter.trim().split(':');
     const filterHandler = filters[filterName];
     if (!filterHandler)
       throw new Error(`Invalid env protocol provided, unknown filter: '${value}'`);
-    return filterHandler(rawValueWithDefault, ...filterParams);
+    return filterHandler(resolvedValue, ...filterParams);
   };
 }
 

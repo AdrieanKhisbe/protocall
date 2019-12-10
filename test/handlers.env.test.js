@@ -163,3 +163,20 @@ test('env configuration with custom filters', t => {
     /Invalid env protocol provided/
   );
 });
+
+test('env with env override', t => {
+  process.env.WONT_SEE = 'nooooo';
+  const envHandler = handlers.env({env: {TEST: 'yes'}});
+  t.is(envHandler('TEST'), 'yes');
+  t.not(envHandler('WONT_SEE'), 'nooooo');
+});
+
+test('env with default config', t => {
+  process.env.EXIST = 'hell yeah';
+  const envHandler = handlers.env({
+    defaults: {EXIST: 'NOOO', DEFAULT: 'yes', OVERRIDE: 'not possible'}
+  });
+  t.is(envHandler('EXIST'), 'hell yeah');
+  t.is(envHandler('DEFAULT'), 'yes');
+  t.is(envHandler('OVERRIDE:-nope'), 'nope');
+});
