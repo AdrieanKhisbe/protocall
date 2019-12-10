@@ -93,17 +93,31 @@ test('echo pipe to to base64', t => {
   t.is(echoHandler('big secret|to:base64'), 'YmlnIHNlY3JldA==');
 });
 
-test('echo pipe to to digest algorithmes', t => {
+test('echo pipe to to digest algorithmes to hex (implicitely and explicitely)', t => {
   t.is(echoHandler('big secret|to:md5'), '764da679935cda6e5f6552f37ef2cac3');
+  t.is(echoHandler('big secret|to:md5:hex'), '764da679935cda6e5f6552f37ef2cac3');
   t.is(echoHandler('big secret|to:md4'), '20c9476c950e98519c2760194767b01e');
+  t.is(echoHandler('big secret|to:md4:hex'), '20c9476c950e98519c2760194767b01e');
   t.is(echoHandler('big secret|to:sha1'), '2151580e68418a2234c5615c4d70a92eb5063710');
+  t.is(echoHandler('big secret|to:sha1:hex'), '2151580e68418a2234c5615c4d70a92eb5063710');
   t.is(
-    echoHandler('big secret|to:sha256'),
+    echoHandler('big secret|to:sha256'), // |to:sha256:hex implicitely tested
     'd9deadfb84f5aa7284724cb8ba1d23e494246904be3c0e6daca4a1c3b3081972'
   );
   t.is(
     echoHandler('big secret|to:sha512'),
     'f2238763da9ce209342fdd48e426359bd03bc603495564859ece8f92a8702e76fe3c855dcaf103e26f02383e3f9cc17fef16ea9b0544a1240437b27c7c2e83ae'
+  );
+});
+
+test('echo pipe to to digest algorithmes to base64', t => {
+  t.is(echoHandler('big secret|to:md5:base64'), 'dk2meZNc2m5fZVLzfvLKww==');
+  t.is(echoHandler('big secret|to:md4:base64'), 'IMlHbJUOmFGcJ2AZR2ewHg==');
+  t.is(echoHandler('big secret|to:sha1:base64'), 'IVFYDmhBiiI0xWFcTXCpLrUGNxA=');
+  t.is(echoHandler('big secret|to:sha256:base64'), '2d6t+4T1qnKEcky4uh0j5JQkaQS+PA5trKShw7MIGXI=');
+  t.is(
+    echoHandler('big secret|to:sha512:base64'),
+    '8iOHY9qc4gk0L91I5CY1m9A7xgNJVWSFns6PkqhwLnb+PIVdyvED4m8COD4/nMF/7xbqmwVEoSQEN7J8fC6Drg=='
   );
 });
 

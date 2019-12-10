@@ -84,23 +84,23 @@ const DEFAULT_FILTERS = {
   r(value, params) {
     return toRegexp(value, params);
   },
-  from(value, params) {
-    if (!params) throw new Error('Missing configuration for the from filter');
-    if (['b64', 'base64'].includes(params)) return Buffer.from(value, 'base64').toString('utf-8');
-    if (params === 'hex') return Buffer.from(value, 'hex').toString('utf-8');
-    throw new Error(`Unkown format specifed for from filter: '${params}'`);
+  from(value, encoding) {
+    if (!encoding) throw new Error('Missing configuration for the from filter');
+    if (['b64', 'base64'].includes(encoding)) return Buffer.from(value, 'base64').toString('utf-8');
+    if (encoding === 'hex') return Buffer.from(value, 'hex').toString('utf-8');
+    throw new Error(`Unkown format specifed for from filter: '${encoding}'`);
   },
-  to(value, params) {
-    if (!params) throw new Error('Missing configuration for the to filter');
-    if (['b64', 'base64'].includes(params)) return Buffer.from(value).toString('base64');
-    if (params === 'hex') return Buffer.from(value).toString('hex');
-    if (DIGEST_ALGORITHMS.includes(params))
+  to(value, encodingOrAlgo, digestEncoding = 'hex') {
+    if (!encodingOrAlgo) throw new Error('Missing configuration for the to filter');
+    if (['b64', 'base64'].includes(encodingOrAlgo)) return Buffer.from(value).toString('base64');
+    if (encodingOrAlgo === 'hex') return Buffer.from(value).toString('hex');
+    if (DIGEST_ALGORITHMS.includes(encodingOrAlgo))
       return crypto
-        .createHash(params)
+        .createHash(encodingOrAlgo)
         .update(value)
-        .digest('hex');
+        .digest(digestEncoding);
 
-    throw new Error(`Unkown format specifed for to filter: '${params}'`);
+    throw new Error(`Unkown format specifed for to filter: '${encodingOrAlgo}'`);
   }
 };
 
@@ -124,11 +124,11 @@ function env(filterOverrides, merge = true) {
     const rawValueWithDefault = defaultValue && rawValue === undefined ? defaultValue : rawValue;
     if (!filter) return rawValueWithDefault;
 
-    const [filterName, filterParam] = filter.trim().split(':');
+    const [filterName, ...filterParams] = filter.trim().split(':');
     const filterHandler = filters[filterName];
     if (!filterHandler)
       throw new Error(`Invalid env protocol provided, unknown filter: '${value}'`);
-    return filterHandler(rawValueWithDefault, filterParam);
+    return filterHandler(rawValueWithDefault, ...filterParams);
   };
 }
 
@@ -152,11 +152,11 @@ function echo(filterOverrides, merge = true) {
     // TODO: later, could add multiple filters
     if (!filter) return echoString;
 
-    const [filterName, filterParam] = filter.trim().split(':');
+    const [filterName, ...filterParams] = filter.trim().split(':');
     const filterHandler = filters[filterName];
     if (!filterHandler)
       throw new Error(`Invalid echo protocol provided, unknown filter: '${value}'`);
-    return filterHandler(echoString, filterParam);
+    return filterHandler(echoString, ...filterParams);
   };
 }
 
