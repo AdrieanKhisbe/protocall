@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const _ = require('lodash/fp');
 const globby = require('globby');
 const callsites = require('callsites');
@@ -68,6 +69,8 @@ function regexp(defaultFlags) {
   };
 }
 
+const DIGEST_ALGORITHMS = ['md5', 'md4', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512'];
+
 const filters = {
   d(value) {
     return parseInt(value, 10);
@@ -91,6 +94,12 @@ const filters = {
     if (!params) throw new Error('Missing configuration for the to filter');
     if (['b64', 'base64'].includes(params)) return Buffer.from(value).toString('base64');
     if (params === 'hex') return Buffer.from(value).toString('hex');
+    if (DIGEST_ALGORITHMS.includes(params))
+      return crypto
+        .createHash(params)
+        .update(value)
+        .digest('hex');
+
     throw new Error(`Unkown format specifed for to filter: '${params}'`);
   }
 };

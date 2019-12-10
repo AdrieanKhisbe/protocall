@@ -88,9 +88,23 @@ test('echo pipe to to hex', t => {
   t.deepEqual(echoHandler('coucouuuu|to:hex'), '636f75636f75757575');
 });
 
-test('echo pipe t to base64', t => {
+test('echo pipe to to base64', t => {
   t.deepEqual(echoHandler('big secret|to:b64'), 'YmlnIHNlY3JldA==');
   t.deepEqual(echoHandler('big secret|to:base64'), 'YmlnIHNlY3JldA==');
+});
+
+test('echo pipe to to digest algorithmes', t => {
+  t.deepEqual(echoHandler('big secret|to:md5'), '764da679935cda6e5f6552f37ef2cac3');
+  t.deepEqual(echoHandler('big secret|to:md4'), '20c9476c950e98519c2760194767b01e');
+  t.deepEqual(echoHandler('big secret|to:sha1'), '2151580e68418a2234c5615c4d70a92eb5063710');
+  t.deepEqual(
+    echoHandler('big secret|to:sha256'),
+    'd9deadfb84f5aa7284724cb8ba1d23e494246904be3c0e6daca4a1c3b3081972'
+  );
+  t.deepEqual(
+    echoHandler('big secret|to:sha512'),
+    'f2238763da9ce209342fdd48e426359bd03bc603495564859ece8f92a8702e76fe3c855dcaf103e26f02383e3f9cc17fef16ea9b0544a1240437b27c7c2e83ae'
+  );
 });
 
 test('echo pipe to to bad config', t => {
