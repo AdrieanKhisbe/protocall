@@ -66,26 +66,26 @@ function regexp() {
   return regexpHandler;
 }
 
+const filters = {
+  d(value) {
+    return parseInt(value, 10);
+  },
+  b(value) {
+    return !['', 'false', '0', undefined].includes(value);
+  },
+  '!b'(value) {
+    return ['', 'false', '0', undefined].includes(value);
+  },
+  r(value) {
+    return regexpHandler(value);
+  }
+};
+
 /**
  * Creates the protocol handler for the `env:` protocol
  * @returns {Function}
  */
 function env() {
-  const filters = {
-    d(value) {
-      return parseInt(value, 10);
-    },
-    b(value) {
-      return !['', 'false', '0', undefined].includes(value);
-    },
-    '!b'(value) {
-      return ['', 'false', '0', undefined].includes(value);
-    },
-    r(value) {
-      return regexpHandler(value);
-    }
-  };
-
   return function envHandler(value) {
     const match = value.match(/^([\w_]+)(?::-(.+?))?(?:[|](.+))?$/);
     if (!match) throw new Error(`Invalid env protocol provided: '${value}'`);
@@ -96,7 +96,29 @@ function env() {
     const rawValueWithDefault = defaultValue && rawValue === undefined ? defaultValue : rawValue;
     if (!filter) return rawValueWithDefault;
     const filterHandler = filters[filter.trim()];
+    if (!filterHandler)
+      throw new Error(`Invalid env protocol provided, unknown filter: '${filter}'`);
     return filterHandler(rawValueWithDefault);
+  };
+}
+
+/**
+ * Creates the protocol handler for the `echo:` protocol
+ * @returns {Function}
+ */
+function echo() {
+  return function echoHandler(value) {
+    const match = value.match(/^(.*?)(?:[|](.+))?$/);
+    if (!match) throw new Error(`Invalid echo protocol provided: '${value}'`);
+    const [, echoString, filter] = match;
+    if (!echoString || echoString.endsWith('|'))
+      throw new Error(`Invalid echo protocol provided: '${value}'`);
+    // TODO: later, could add multiple filters
+    if (!filter) return echoString;
+    const filterHandler = filters[filter.trim()];
+    if (!filterHandler)
+      throw new Error(`Invalid echo protocol provided, unknown filter: '${filter}'`);
+    return filterHandler(echoString);
   };
 }
 
@@ -156,4 +178,4 @@ function glob(options) {
   };
 }
 
-module.exports = {path: _path, file, base64, regexp, env, require: _require, exec, glob};
+module.exports = {path: _path, file, base64, regexp, env, echo, require: _require, exec, glob};

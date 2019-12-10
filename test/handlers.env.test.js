@@ -15,10 +15,12 @@ test('env raw', t => {
 });
 
 test('env with invalid value', t => {
+  process.env.TEST_SAMPLE = '8000';
   t.throws(() => envHandler('TEST_SAMPLE:-'), /Invalid env protocol provided/);
   t.throws(() => envHandler('TEST_SAMPLE|'), /Invalid env protocol provided/);
   t.throws(() => envHandler('TEST-SAMPLE'), /Invalid env protocol provided/);
   t.throws(() => envHandler('TEST_SAMPLE:-'), /Invalid env protocol provided/);
+  t.throws(() => envHandler('TEST_SAMPLE|kikou'), /Invalid env protocol provided, unknown filter/);
 });
 
 test('env as number', t => {

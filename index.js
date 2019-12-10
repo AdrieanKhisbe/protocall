@@ -10,7 +10,8 @@ const getDefaultResolver = (dirname, parent) => {
     env: handlers.env(),
     require: handlers.require(folder),
     exec: handlers.exec(folder),
-    regexp: handlers.regexp()
+    regexp: handlers.regexp(),
+    echo: handlers.echo()
   });
 };
 
