@@ -217,11 +217,7 @@ function exec(basedir) {
  * @returns {Function}
  */
 function glob(options) {
-  if (_.isString(options)) {
-    options = {cwd: options};
-  }
-
-  options = options || {};
+  options = _.isString(options) ? {cwd: options} : options || {};
   options.cwd = options.cwd || getCallerFolder();
 
   const resolvePath = _path(options.cwd);

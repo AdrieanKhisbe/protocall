@@ -15,7 +15,7 @@ test('getDefaultResolver', async t => {
 
 test('getDefaultResolver with dirname', async t => {
   const protocallFolder = path.dirname(__dirname);
-  const resolver = protocall.getDefaultResolver(protocallFolder);
+  const resolver = protocall.getDefaultResolver({dirname: protocallFolder});
   const config = {
     path: 'path:package.json',
     base64: 'base64:cHJvdG8gY2FsbA==',
@@ -30,7 +30,7 @@ test('getDefaultResolver with dirname', async t => {
 
 test('getDefaultResolver with extra resolver', async t => {
   const protocallFolder = path.dirname(__dirname);
-  const resolver = protocall.getDefaultResolver(protocallFolder);
+  const resolver = protocall.getDefaultResolver({dirname: protocallFolder});
   resolver.use('glob', protocall.handlers.glob());
   const config = {
     path: 'path:package.json',
@@ -43,4 +43,23 @@ test('getDefaultResolver with extra resolver', async t => {
   t.assert(resolvedConfig.env === 'test');
   t.deepEqual(resolvedConfig.base64, Buffer.from('proto call'));
   t.assert(resolvedConfig.glob.length === 2);
+});
+
+test('getDefaultResolver with specific config', async t => {
+  const protocallFolder = path.dirname(__dirname);
+  const resolver = protocall.getDefaultResolver({
+    dirname: protocallFolder,
+    envOptions: {env: {SOMETHING: '12'}},
+    echoOptions: {filters: {lol: () => 'lol'}}
+  });
+  resolver.use('glob', protocall.handlers.glob());
+  const config = {
+    path: 'path:package.json',
+    env: 'env:SOMETHING|d',
+    lol: 'echo:whatever|lol'
+  };
+  const resolvedConfig = await resolver.resolve(config);
+  t.assert(resolvedConfig.path === path.resolve(path.join(protocallFolder, 'package.json')));
+  t.assert(resolvedConfig.env === 12);
+  t.assert(resolvedConfig.lol === 'lol');
 });
