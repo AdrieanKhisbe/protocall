@@ -11,15 +11,15 @@ function isModule(file) {
 }
 
 class Resolver {
-  constructor(parent, handlers) {
-    if (!(parent instanceof Resolver) && !handlers) {
-      handlers = parent;
+  constructor(parent, protocols) {
+    if (!(parent instanceof Resolver) && !protocols) {
+      protocols = parent;
       parent = null;
     }
     this.parent = parent;
     this._handlers = {};
-    if (handlers) {
-      this.use(handlers);
+    if (protocols) {
+      this.use(protocols);
     }
   }
 

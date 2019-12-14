@@ -52,7 +52,6 @@ test('getDefaultResolver with specific config', async t => {
     envOptions: {env: {SOMETHING: '12'}},
     echoOptions: {filters: {lol: () => 'lol'}}
   });
-  resolver.use('glob', protocall.handlers.glob());
   const config = {
     path: 'path:package.json',
     env: 'env:SOMETHING|d',
@@ -62,4 +61,64 @@ test('getDefaultResolver with specific config', async t => {
   t.assert(resolvedConfig.path === path.resolve(path.join(protocallFolder, 'package.json')));
   t.assert(resolvedConfig.env === 12);
   t.assert(resolvedConfig.lol === 'lol');
+});
+
+test('getResolver with specific config (as default resolver)', async t => {
+  const protocallFolder = path.dirname(__dirname);
+  const resolver = protocall.getResolver({
+    dirname: protocallFolder,
+    envOptions: {env: {SOMETHING: '12'}},
+    echoOptions: {filters: {lol: () => 'lol'}}
+  });
+  const config = {
+    path: 'path:package.json',
+    env: 'env:SOMETHING|d',
+    lol: 'echo:whatever|lol'
+  };
+  const resolvedConfig = await resolver.resolve(config);
+  t.assert(resolvedConfig.path === path.resolve(path.join(protocallFolder, 'package.json')));
+  t.assert(resolvedConfig.env === 12);
+  t.assert(resolvedConfig.lol === 'lol');
+});
+
+test('getResolver with extra protocols', async t => {
+  const protocallFolder = path.dirname(__dirname);
+  const resolver = protocall.getResolver({
+    dirname: protocallFolder,
+    envOptions: {env: {SOMETHING: '12'}},
+    echoOptions: {filters: {lol: () => 'lol'}},
+    extraProtocols: {lol: v => `lol is ${v}`}
+  });
+  const config = {
+    path: 'path:package.json',
+    env: 'env:SOMETHING|d',
+    lolFilter: 'echo:whatever|lol',
+    lolProtocol: 'lol:whatever'
+  };
+  const resolvedConfig = await resolver.resolve(config);
+  t.assert(resolvedConfig.path === path.resolve(path.join(protocallFolder, 'package.json')));
+  t.assert(resolvedConfig.env === 12);
+  t.assert(resolvedConfig.lolFilter === 'lol');
+  t.assert(resolvedConfig.lolProtocol === 'lol is whatever');
+});
+
+test('getResolver with protocols replacement', async t => {
+  const protocallFolder = path.dirname(__dirname);
+  const resolver = protocall.getResolver({
+    dirname: protocallFolder, // wont be of use
+    envOptions: {env: {SOMETHING: '12'}},
+    echoOptions: {filters: {lol: () => 'lol'}},
+    protocols: {lol: v => `lol is ${v}`}
+  });
+  const config = {
+    path: 'path:package.json',
+    env: 'env:SOMETHING|d',
+    lolFilter: 'echo:whatever|lol',
+    lolProtocol: 'lol:whatever'
+  };
+  const resolvedConfig = await resolver.resolve(config);
+  t.assert(resolvedConfig.path === 'path:package.json');
+  t.assert(resolvedConfig.env === 'env:SOMETHING|d');
+  t.assert(resolvedConfig.lolFilter === 'echo:whatever|lol');
+  t.assert(resolvedConfig.lolProtocol === 'lol is whatever');
 });

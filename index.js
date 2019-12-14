@@ -16,6 +16,14 @@ const getDefaultResolver = options => {
   });
 };
 
+const getResolver = options => {
+  if (options.protocols) return new Resolver(options.parent, options.protocols);
+
+  const resolver = getDefaultResolver(options);
+  if (options.extraProtocols) resolver.use(options.extraProtocols);
+  return resolver;
+};
+
 const create = (parent, initialHandlers) => new Resolver(parent, initialHandlers);
 
 module.exports = {
@@ -23,5 +31,6 @@ module.exports = {
   resolver: Resolver,
   create,
   handlers,
+  getResolver,
   getDefaultResolver
 };
