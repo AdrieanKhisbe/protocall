@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const _ = require('lodash/fp');
 const globby = require('globby');
 const callsites = require('callsites');
@@ -54,41 +55,122 @@ function base64() {
   };
 }
 
+function toRegexp(value, params) {
+  const match = value.match(/^\/(.*)\/([miguys]+)?$/);
+  if (!match) return new RegExp(value, params);
+
+  const [, pattern, flags] = match;
+  return new RegExp(pattern, flags || params);
+}
+
+function regexp(defaultFlags) {
+  return function regexpHandler(value) {
+    return toRegexp(value, defaultFlags);
+  };
+}
+
+const DIGEST_ALGORITHMS = ['md5', 'md4', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512'];
+
+const DEFAULT_FILTERS = {
+  d(value) {
+    return parseInt(value, 10);
+  },
+  b(value) {
+    return !['', 'false', '0', undefined].includes(value);
+  },
+  '!b'(value) {
+    return ['', 'false', '0', undefined].includes(value);
+  },
+  r(value, params) {
+    return toRegexp(value, params);
+  },
+  from(value, encoding) {
+    if (!encoding) throw new Error('Missing configuration for the from filter');
+    if (['b64', 'base64'].includes(encoding)) return Buffer.from(value, 'base64').toString('utf-8');
+    if (encoding === 'hex') return Buffer.from(value, 'hex').toString('utf-8');
+    throw new Error(`Unkown format specifed for from filter: '${encoding}'`);
+  },
+  to(value, encodingOrAlgo, digestEncoding = 'hex') {
+    if (!encodingOrAlgo) throw new Error('Missing configuration for the to filter');
+    if (['b64', 'base64'].includes(encodingOrAlgo)) return Buffer.from(value).toString('base64');
+    if (encodingOrAlgo === 'hex') return Buffer.from(value).toString('hex');
+    if (DIGEST_ALGORITHMS.includes(encodingOrAlgo))
+      return crypto
+        .createHash(encodingOrAlgo)
+        .update(value)
+        .digest(digestEncoding);
+
+    throw new Error(`Unkown format specifed for to filter: '${encodingOrAlgo}'`);
+  }
+};
+
+const shouldMerge = ({merge, replace}) => {
+  if (merge) return true;
+  if (replace) return false;
+  if (merge === false && replace === undefined) return false;
+  return true;
+};
+
 /**
  * Creates the protocol handler for the `env:` protocol
  * @returns {Function}
  */
-function env() {
-  const filters = {
-    d(value) {
-      return parseInt(value, 10);
-    },
-    b(value) {
-      return !['', 'false', '0', undefined].includes(value);
-    },
-    '!b'(value) {
-      return ['', 'false', '0', undefined].includes(value);
-    }
+function env(options = {}) {
+  const filters = options.filters
+    ? shouldMerge(options)
+      ? Object.assign({}, DEFAULT_FILTERS, options.filters)
+      : options.filters
+    : DEFAULT_FILTERS;
+
+  const env = options.env ? options.env : process.env;
+
+  const getValue = (key, defaultOverride) => {
+    const rawValue = env[key];
+    if (rawValue !== undefined) return rawValue;
+    if (defaultOverride) return defaultOverride;
+    if (options.defaults) return options.defaults[key];
   };
 
   return function envHandler(value) {
-    let result;
+    const match = value.match(/^([\w_]+)(?::-(.+?))?(?:[|](.+))?$/);
+    if (!match) throw new Error(`Invalid env protocol provided: '${value}'`);
+    const [, envVariableName, defaultValue, filter] = match;
+    // TODO: later, could add multiple filters
 
-    Object.keys(filters).some(function(key) {
-      const fn = filters[key];
-      const pattern = `|${key}`;
-      const loc = value.indexOf(pattern);
+    const resolvedValue = getValue(envVariableName, defaultValue);
+    if (!filter) return resolvedValue;
 
-      if (loc > -1 && loc === value.length - pattern.length) {
-        value = value.slice(0, -pattern.length);
-        result = fn(process.env[value]);
-        return true;
-      }
+    const [filterName, ...filterParams] = filter.trim().split(':');
+    const filterHandler = filters[filterName];
+    if (!filterHandler)
+      throw new Error(`Invalid env protocol provided, unknown filter: '${value}'`);
+    return filterHandler(resolvedValue, ...filterParams);
+  };
+}
 
-      return false;
-    });
+/**
+ * Creates the protocol handler for the `echo:` protocol
+ * @returns {Function}
+ */
+function echo(options = {}) {
+  const filters = options.filters
+    ? shouldMerge(options)
+      ? Object.assign({}, DEFAULT_FILTERS, options.filters)
+      : options.filters
+    : DEFAULT_FILTERS;
 
-    return result === undefined ? process.env[value] : result;
+  return function echoHandler(value) {
+    const [, echoString, filter] = value.match(/^(.*?)(?:[|](.+))?$/);
+    if (!echoString || echoString.endsWith('|'))
+      throw new Error(`Invalid echo protocol provided: '${value}'`);
+    // TODO: later, could add multiple filters
+    if (!filter) return echoString;
+
+    const [filterName, ...filterParams] = filter.trim().split(':');
+    const filterHandler = filters[filterName];
+    if (!filterHandler)
+      throw new Error(`Invalid echo protocol provided, unknown filter: '${value}'`);
+    return filterHandler(echoString, ...filterParams);
   };
 }
 
@@ -135,11 +217,7 @@ function exec(basedir) {
  * @returns {Function}
  */
 function glob(options) {
-  if (_.isString(options)) {
-    options = {cwd: options};
-  }
-
-  options = options || {};
+  options = _.isString(options) ? {cwd: options} : options || {};
   options.cwd = options.cwd || getCallerFolder();
 
   const resolvePath = _path(options.cwd);
@@ -148,4 +226,4 @@ function glob(options) {
   };
 }
 
-module.exports = {path: _path, file, base64, env, require: _require, exec, glob};
+module.exports = {path: _path, file, base64, regexp, env, echo, require: _require, exec, glob};

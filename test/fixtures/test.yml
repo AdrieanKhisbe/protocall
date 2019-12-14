@@ -1,0 +1,10 @@
+foo: bar
+truthy: true
+falsy: false
+numeric: 10
+call: "foo:maybe"
+i:
+  came: "bar:in"
+  like:
+    - "foo:a" 
+    - wrecking: "bar:ball"

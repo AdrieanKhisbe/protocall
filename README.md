@@ -66,6 +66,7 @@ All these are loaded by the `getDefaultResolver`
 - [require](#require)
 - [exec](#exec)
 - [glob](#glob)
+- [regexp](#regexp)
 
 
 ### path
@@ -92,7 +93,13 @@ Creates a handler which will return a buffer containing the content of the base6
 ### env
 `protocall.handlers.env()`
 
-Creates a handler which will resolve the provided value as an environment variable, optionally casting the value using the provided filter. Supported filters are `|d`, `|b`, and `|!b` which will cast to Number and Boolean types respectively.
+Creates a handler which will resolve the provided value as an environment variable, optionally casting the value using the provided filter.
+Supported filters are:
+- `|d` to cast for numbers
+- `|b`, and `|!b` to cast Boolean types (`!b` negating the value)
+- `|r` to cast to `RegExp`. (`/` delimiters can be omited if you dont specify any flags.)
+
+You can also specify a default value with a similar syntax than bash, using `:-` to separate the variable name from the default value.
 
 Examples:
 ```json
@@ -101,7 +108,10 @@ Examples:
     "numver": "env:PORT|d",
     "true": "env:ENABLED|b",
     "false": "env:FALSY|b",
-    "notFalse": "env:FALSY|!b"
+    "notFalse": "env:FALSY|!b",
+    "regexp": "env:REGEXP|r",
+    "withDefault": "env:SOMETHING:-with default",
+    "withDefaultAndFilter": "env:SOME_NUMBER:-12|d",
 }
 ```
 
@@ -146,6 +156,18 @@ Creates a handler which match files using the patterns the shell uses.
 ```json
 {
     "files": "glob:**/*.js"
+}
+```
+
+### regexp
+`protocall.handlers.regexp()`
+
+Creates a handler which will convert string to associated regular expression.
+
+```json
+{
+    "anything": "regexp:.*",
+    "anythingWithFlag": "regexp:/.*/gm",
 }
 ```
 
@@ -203,7 +225,25 @@ Return a promise that is resolved to the processed data.
 
 Return a promise that is resolved to the processed data.
 
+It is now also possible to provide a specific parser for non JSON files.
+To do so, instead to provide file path, provide an object with a `path` and `parser` property.
+`resolver.resolveFile({path, parser}, [callback]);`
+
 ## Advanced resolver usage
+
+### Loading config from yaml
+
+```js
+const protocall = require('protocall');
+const yaml = require('js-yaml');
+const resolver = protocall.getDefaultResolver();
+resolver.resolveFile({
+    path: './relative/path/to.yaml',
+    parser: yaml.safeLoad
+}).then(config => {
+    // play around with the config
+})
+```
 
 ### Multiple handlers
 Multiple handlers can be registered for a given protocol. They will be executed in the order registered and the output

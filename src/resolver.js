@@ -11,15 +11,15 @@ function isModule(file) {
 }
 
 class Resolver {
-  constructor(parent, handlers) {
-    if (!(parent instanceof Resolver) && !handlers) {
-      handlers = parent;
+  constructor(parent, protocols) {
+    if (!(parent instanceof Resolver) && !protocols) {
+      protocols = parent;
       parent = null;
     }
     this.parent = parent;
     this._handlers = {};
-    if (handlers) {
-      this.use(handlers);
+    if (protocols) {
+      this.use(protocols);
     }
   }
 
@@ -138,15 +138,17 @@ class Resolver {
   }
 
   resolveFile(file, callback) {
-    if (isModule(file))
+    const {path, parser} = _.isString(file) ? {path: file, parser: JSON.parse} : file;
+
+    if (isModule(path))
       // eslint-disable-next-line import/no-dynamic-require
-      return this.resolve(require(file), file, callback);
+      return this.resolve(require(path), path, callback);
 
     const result = new Promise((resolve, reject) =>
-      fs.readFile(file, 'utf8', (err, data) => {
+      fs.readFile(path, 'utf8', (err, data) => {
         if (err) return reject(err);
         try {
-          return resolve(JSON.parse(data));
+          return resolve(parser(data));
         } catch (parsingError) {
           reject(parsingError);
         }

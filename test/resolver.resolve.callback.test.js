@@ -1,6 +1,8 @@
 const path = require('path');
 const test = require('ava');
 const _ = require('lodash/fp');
+const yaml = require('js-yaml');
+const source = require('./fixtures/test');
 const protocall = require('..');
 
 function foo(input) {
@@ -112,7 +114,6 @@ test.cb('resolveFile', t => {
   resolver.use('foo', foo);
   resolver.use('bar', bar);
 
-  const source = require('./fixtures/test');
   resolver.resolveFile(path.resolve(__dirname, './fixtures/test'), function resolve(err, actual) {
     t.falsy(err);
     t.is(actual.foo, source.foo);
@@ -132,7 +133,6 @@ test.cb('resolveFile txt', t => {
   resolver.use('foo', foo);
   resolver.use('bar', bar);
 
-  const source = require('./fixtures/test');
   resolver.resolveFile(path.resolve(__dirname, './fixtures/test.txt'), function(err, actual) {
     t.falsy(err);
     t.is(actual.foo, source.foo);
@@ -145,6 +145,31 @@ test.cb('resolveFile txt', t => {
     t.is(actual.i.like[1].wrecking, 'ball_bar');
     t.end();
   });
+});
+
+test.cb('resolveFile custom parser like yaml', t => {
+  const resolver = protocall.create();
+  resolver.use('foo', foo);
+  resolver.use('bar', bar);
+
+  resolver.resolveFile(
+    {
+      path: path.resolve(__dirname, './fixtures/test.yml'),
+      parser: yaml.safeLoad
+    },
+    (err, actual) => {
+      t.not(err);
+      t.is(actual.foo, source.foo);
+      t.is(actual.truthy, source.truthy);
+      t.is(actual.falsy, source.falsy);
+      t.is(actual.numeric, source.numeric);
+      t.is(actual.call, 'maybe_foo');
+      t.is(actual.i.came, 'in_bar');
+      t.is(actual.i.like[0], 'a_foo');
+      t.is(actual.i.like[1].wrecking, 'ball_bar');
+      t.end();
+    }
+  );
 });
 
 test.cb('resolveFile error', t => {
@@ -168,7 +193,6 @@ test.cb('stack', t => {
 
   const child = protocall.create(parent);
 
-  const source = require('./fixtures/test');
   child.resolve(source, function(err, actual) {
     t.falsy(err);
     t.not(actual, source);

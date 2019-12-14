@@ -1,16 +1,27 @@
 const Resolver = require('./src/resolver');
 const handlers = require('./src/handlers');
 
-const getDefaultResolver = (dirname, parent) => {
+const getDefaultResolver = options => {
+  const {dirname, parent, envOptions, echoOptions} = options || {};
   const folder = dirname || process.cwd();
   return new Resolver(parent, {
     path: handlers.path(folder),
     file: handlers.file(folder),
     base64: handlers.base64(),
-    env: handlers.env(),
+    env: handlers.env(envOptions),
     require: handlers.require(folder),
-    exec: handlers.exec(folder)
+    exec: handlers.exec(folder),
+    regexp: handlers.regexp(),
+    echo: handlers.echo(echoOptions)
   });
+};
+
+const getResolver = options => {
+  if (options.protocols) return new Resolver(options.parent, options.protocols);
+
+  const resolver = getDefaultResolver(options);
+  if (options.extraProtocols) resolver.use(options.extraProtocols);
+  return resolver;
 };
 
 const create = (parent, initialHandlers) => new Resolver(parent, initialHandlers);
@@ -20,5 +31,6 @@ module.exports = {
   resolver: Resolver,
   create,
   handlers,
+  getResolver,
   getDefaultResolver
 };
